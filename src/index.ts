@@ -61,9 +61,15 @@ app.post('/systemgenerated_crossword', async (req, res) => {
         const string = JSON.stringify(countryCrossword.crossWordEnglish);
         const json = JSON.parse(string);
         var limited_List = [];
-
+        
         for(let i = 0; i < req.body.words_limit; i++) {
-            limited_List.push(json[0].allWords[Math.floor(Math.random()*json[0].allWords.length)]);
+        
+            if(limited_List.includes(json[0].allWords[Math.floor(Math.random()*json[0].allWords.length)])) {
+                limited_List.push(json[0].allWords[Math.floor(Math.random()*json[0].allWords.length)]);
+            }
+            else {
+                limited_List.push(json[0].allWords[Math.floor(Math.random()*json[0].allWords.length)]);
+            }
         }
        
         const words = jcc.upperCaseAll(json[0].allWords);
@@ -82,7 +88,13 @@ else if(req.body.language === 'es') {
 
 
     for(let i = 0; i < req.body.words_limit; i++) {
-        limited_List.push(json[0].allWords[Math.floor(Math.random()*json[0].allWords.length)]);
+        
+        if(limited_List.includes(json[0].allWords[Math.floor(Math.random()*json[0].allWords.length)])) {
+            limited_List.push(json[0].allWords[Math.floor(Math.random()*json[0].allWords.length)]);
+        }
+        else {
+            limited_List.push(json[0].allWords[Math.floor(Math.random()*json[0].allWords.length)]);
+        }
     }
 
 
@@ -116,7 +128,12 @@ else {
         var limited_List = [];
     
         for(let i = 0; i < req.body.words_limit; i++) {
+            if(limited_List.includes(words[Math.floor(Math.random()*words.length)])) {
+                limited_List.push(words[Math.floor(Math.random()*words.length)]);
+            }
+            else {
                limited_List.push(words[Math.floor(Math.random()*words.length)]);
+            }
          }
          _data.language = "English, en"
          _data.limited_words= limited_List;
@@ -133,7 +150,12 @@ else {
     var limited_List = [];
 
     for(let i = 0; i < req.body.words_limit; i++) {
+        if(limited_List.includes(words[Math.floor(Math.random()*words.length)])) {
+            limited_List.push(words[Math.floor(Math.random()*words.length)]);
+        }
+        else {
            limited_List.push(words[Math.floor(Math.random()*words.length)]);
+        }
      }
      _data.language = "Spanish, es"
      _data.limited_words= limited_List;
