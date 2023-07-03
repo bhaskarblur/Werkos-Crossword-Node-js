@@ -10,7 +10,7 @@ import {gridToJSON, generateCrosswordGrid} from './systemCrosswordAlgo';
 import { generateCrossword } from './CrosswordAlgo2';
 
 const jcc = require('json-case-convertor');
-const PORT = 3000;
+const PORT = 3001;
 const app= express();
 
  
@@ -72,7 +72,7 @@ app.post('/systemgenerated_crossword', async (req, res) => {
             }
         }
        
-        const words = jcc.upperCaseAll(json[0].allWords);
+        const words = jcc.upperCaseAll(limited_List);
     const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
     json[0].limited_words =limited_List;
     json[0].words_grid= crosswordGrid;
@@ -99,7 +99,7 @@ else if(req.body.language === 'es') {
 
 
    
-    const words = jcc.upperCaseAll(json[0].allWords);
+    const words = jcc.upperCaseAll(limited_List);
     const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ');
     json[0].limited_words =limited_List;
     json[0].words_grid= crosswordGrid;
@@ -115,7 +115,6 @@ else {
   app.post('/usergenerated_crossword',async (req, res) => {
 
     const words = jcc.upperCaseAll(JSON.parse(req.body.all_words));
-
     if(req.body.words_limit> words.length) {
         res.send({"message":"Words limit should be less than number of words available in List"});
         return;
