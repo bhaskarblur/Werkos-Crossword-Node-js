@@ -10,7 +10,7 @@ import {gridToJSON, generateCrosswordGrid} from './systemCrosswordAlgo';
 import { generateCrossword } from './CrosswordAlgo2';
 
 const jcc = require('json-case-convertor');
-const PORT = 3001;
+const PORT = 10000;
 const app= express();
 
  
