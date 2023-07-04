@@ -79,7 +79,7 @@ app.post('/systemgenerated_crossword', async (req, res) => {
        
         const words = jcc.upperCaseAll(limited_List);
     const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-    json[0].limited_words =limited_List;
+    json[0].limited_words =jcc.upperCaseAll(limited_List);
     json[0].words_grid= crosswordGrid;
    res.send(json[0]);
 
@@ -108,7 +108,7 @@ else if(req.body.language === 'es') {
    
     const words = jcc.upperCaseAll(limited_List);
     const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ');
-    json[0].limited_words =limited_List;
+    json[0].limited_words = jcc.upperCaseAll(limited_List);
     json[0].words_grid= crosswordGrid;
     res.send(json[0]);
 
@@ -138,7 +138,7 @@ else {
          }
 
          _data.language = "English, en"
-         _data.limited_words= limited_List;
+         _data.limited_words= jcc.upperCaseAll(limited_List);
          _data.words_grid= crosswordGrid;
          _data.words_limit= req.body.words_limit;
         
@@ -155,7 +155,7 @@ else {
             limited_List.push(randomLimited(limited_List, words));
          }
      _data.language = "Spanish, es"
-     _data.limited_words= limited_List;
+     _data.limited_words= jcc.upperCaseAll(limited_List);
      _data.words_grid= crosswordGrid;
      _data.words_limit= req.body.words_limit;
     
@@ -190,7 +190,7 @@ else {
        
         const words = jcc.upperCaseAll(limited_List);
     const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-    json[0].limited_words =limited_List;
+    json[0].limited_words = jcc.upperCaseAll(limited_List);
     json[0].words_grid= crosswordGrid;
    res.send(json[0]);
 
@@ -217,7 +217,7 @@ else if(req.body.language === 'es') {
 
     const words = jcc.upperCaseAll(limited_List);
     const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ');
-    json[0].limited_words =limited_List;
+    json[0].limited_words = jcc.upperCaseAll(limited_List);
     json[0].words_grid= crosswordGrid;
     res.send(json[0]);
 
