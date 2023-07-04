@@ -6,7 +6,6 @@ import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import { countryCrossword, topicList, beachCrossword } from './crosswordData';
-import {gridToJSON, generateCrosswordGrid} from './systemCrosswordAlgo';
 import { generateCrossword } from './CrosswordAlgo2';
 import _, { map } from 'underscore';
 const jcc = require('json-case-convertor');

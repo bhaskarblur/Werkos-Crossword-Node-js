@@ -28,6 +28,7 @@
     "express": "^4.18.2",
     "helmet": "^7.0.0",
     "json-case-convertor": "^1.4.0",
+    "lodash": "^4.17.21",
     "translate": "^2.0.2",
     "underscore": "^1.13.6"
   }
