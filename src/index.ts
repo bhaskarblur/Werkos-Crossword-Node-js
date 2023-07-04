@@ -78,7 +78,7 @@ app.post('/systemgenerated_crossword', async (req, res) => {
          }
        
         const words = jcc.upperCaseAll(limited_List);
-    const crosswordGrid = generateCrossword(words,englishAlphabets);
+    const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
     json[0].limited_words =jcc.upperCaseAll(limited_List);
     json[0].words_grid= crosswordGrid;
    res.send(json[0]);
@@ -107,7 +107,7 @@ else if(req.body.language === 'es') {
      }
    
     const words = jcc.upperCaseAll(limited_List);
-    const crosswordGrid = generateCrossword(words,spanishAlphabets);
+    const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ');
     json[0].limited_words = jcc.upperCaseAll(limited_List);
     json[0].words_grid= crosswordGrid;
     res.send(json[0]);
@@ -127,7 +127,7 @@ else {
         return;
     }
     if(req.body.language === 'en') {
-        const crosswordGrid = generateCrossword(words,englishAlphabets);
+        const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
         const data = JSON.stringify({"allWords": words});
         var _data = JSON.parse(data);
@@ -145,7 +145,7 @@ else {
         res.send(_data);
     }
    else if(req.body.language === 'es') {
-    const crosswordGrid = generateCrossword(words,spanishAlphabets);
+    const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ');
 
     const data = JSON.stringify({"allWords": words});
     var _data = JSON.parse(data);
@@ -189,7 +189,7 @@ else {
          }
        
         const words = jcc.upperCaseAll(limited_List);
-    const crosswordGrid = generateCrossword(words, englishAlphabets);
+    const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
     json[0].limited_words = jcc.upperCaseAll(limited_List);
     json[0].words_grid= crosswordGrid;
    res.send(json[0]);
@@ -216,7 +216,7 @@ else if(req.body.language === 'es') {
 
 
     const words = jcc.upperCaseAll(limited_List);
-    const crosswordGrid = generateCrossword(words,spanishAlphabets);
+    const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ');
     json[0].limited_words = jcc.upperCaseAll(limited_List);
     json[0].words_grid= crosswordGrid;
     res.send(json[0]);
