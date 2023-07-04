@@ -1,31 +1,30 @@
-export function generateCrossword(words, alphabetList) {
-  const rows = 14; // Number of rows in the grid
-  const cols = 11; // Number of columns in the grid
-  //const alphabetList = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; // List of alphabet characters
+export function generateCrossword(wordsToMark, alphabets) {
+  const width = 14; // Number of columns
+  const height = 11; // Number of rows
 
-  // Initialize an empty grid
-  const grid = Array.from({ length: rows }, () => Array(cols).fill(''));
+  // Create an empty crossword grid
+  const crossword = [];
+  for (let i = 0; i < height; i++) {
+    crossword.push(Array(width).fill(' '));
+  }
 
-  // Helper function to check if a word can be placed at the given position
+  // Helper function to check if a word can be placed at a given position
   function canPlaceWord(word, startX, startY, stepX, stepY) {
-    const wordLength = word.length;
-
-    // Check if the word fits in the grid
+    // Check if word fits within the crossword grid
     if (
-      startX + stepX * wordLength < 0 ||
-      startX + stepX * wordLength >= cols ||
-      startY + stepY * wordLength < 0 ||
-      startY + stepY * wordLength >= rows
+      startX + stepX * (word.length - 1) < 0 ||
+      startX + stepX * (word.length - 1) >= width ||
+      startY + stepY * (word.length - 1) < 0 ||
+      startY + stepY * (word.length - 1) >= height
     ) {
       return false;
     }
 
-    // Check if the word overlaps with existing letters
-    for (let i = 0; i < wordLength; i++) {
-      const x = startX + stepX * i;
-      const y = startY + stepY * i;
-
-      if (grid[y][x] !== '' && grid[y][x] !== word.charAt(i)) {
+    // Check if word overlaps with any existing letters
+    for (let i = 0; i < word.length; i++) {
+      const x = startX + i * stepX;
+      const y = startY + i * stepY;
+      if (crossword[y][x] !== ' ' && crossword[y][x] !== word[i]) {
         return false;
       }
     }
@@ -33,78 +32,70 @@ export function generateCrossword(words, alphabetList) {
     return true;
   }
 
-  // Helper function to place a word at the given position
+  // Helper function to place a word at a given position
   function placeWord(word, startX, startY, stepX, stepY) {
     for (let i = 0; i < word.length; i++) {
-      const x = startX + stepX * i;
-      const y = startY + stepY * i;
-
-      grid[y][x] = word.charAt(i);
+      crossword[startY + i * stepY][startX + i * stepX] = word[i];
     }
   }
 
-  // Shuffle the words randomly
-  words = words.sort(() => Math.random() - 0.5);
-
-  // Place the words horizontally, vertically, and diagonally
-  for (const word of words) {
+  // Place all words horizontally, vertically, and diagonally
+  wordsToMark.forEach(word => {
+    let direction;
+    let startX, startY, stepX, stepY;
     let placed = false;
 
-    // Try placing the word in all directions until successful
-    for (let attempts = 0; attempts < 10 && !placed; attempts++) {
-      const direction = Math.floor(Math.random() * 8); // Random direction (0-7)
-
-      let startX, startY;
-      let stepX, stepY;
+    while (!placed) {
+      direction = Math.floor(Math.random() * 8); // Random direction: 0 to 7
 
       if (direction === 0) {
-        // Horizontal (left to right)
-        startX = Math.floor(Math.random() * (cols - word.length + 1));
-        startY = Math.floor(Math.random() * rows);
+        // Place horizontally left to right
+        startX = Math.floor(Math.random() * (width - word.length + 1));
+        startY = Math.floor(Math.random() * height);
         stepX = 1;
         stepY = 0;
       } else if (direction === 1) {
-        // Horizontal (right to left)
-        startX = Math.floor(Math.random() * (cols - word.length + 1)) + word.length - 1;
-        startY = Math.floor(Math.random() * rows);
+        // Place horizontally right to left
+        startX = Math.floor(Math.random() * (width - word.length + 1)) + word.length - 1;
+        startY = Math.floor(Math.random() * height);
         stepX = -1;
         stepY = 0;
       } else if (direction === 2) {
-        // Vertical (top to bottom)
-        startX = Math.floor(Math.random() * cols);
-        startY = Math.floor(Math.random() * (rows - word.length + 1));
+        // Place vertically top to bottom
+        startX = Math.floor(Math.random() * width);
+        startY = Math.floor(Math.random() * (height - word.length + 1));
         stepX = 0;
         stepY = 1;
       } else if (direction === 3) {
-        // Vertical (bottom to top)
-        startX = Math.floor(Math.random() * cols);
-        startY = Math.floor(Math.random() * (rows - word.length + 1)) + word.length - 1;
+        // Place vertically bottom to top
+        startX = Math.floor(Math.random() * width);
+        startY = Math.floor(Math.random() * (height - word.length + 1)) + word.length - 1;
         stepX = 0;
         stepY = -1;
       } else if (direction === 4) {
-        // Diagonal (top-left to bottom-right)
-        startX = Math.floor(Math.random() * (cols - word.length + 1));
-        startY = Math.floor(Math.random() * (rows - word.length + 1));
+        // Place diagonally top-left to bottom-right
+        startX = Math.floor(Math.random() * (width - word.length + 1));
+        startY = Math.floor(Math.random() * (height - word.length + 1));
         stepX = 1;
         stepY = 1;
       } else if (direction === 5) {
-        // Diagonal (bottom-right to top-left)
-        startX = Math.floor(Math.random() * (cols - word.length + 1)) + word.length - 1;
-        startY = Math.floor(Math.random() * (rows - word.length + 1)) + word.length - 1;
+        // Place diagonally bottom-right to top-left
+        startX = Math.floor(Math.random() * (width - word.length + 1)) + word.length - 1;
+        startY = Math.floor(Math.random() * (height - word.length + 1)) + word.length - 1;
         stepX = -1;
         stepY = -1;
       } else if (direction === 6) {
-        // Diagonal (top-right to bottom-left)
-        startX = Math.floor(Math.random() * (cols - word.length + 1));
-        startY = Math.floor(Math.random() * (rows - word.length + 1)) + word.length - 1;
-        stepX = 1;
-        stepY = -1;
-      } else {
-        // Diagonal (bottom-left to top-right)
-        startX = Math.floor(Math.random() * (cols - word.length + 1)) + word.length - 1;
-        startY = Math.floor(Math.random() * (rows - word.length + 1));
+        // Place diagonally top-right to bottom-left
+        startX = Math.floor(Math.random() * (width - word.length + 1)) + word.length - 1;
+        startY = Math.floor(Math.random() * (height - word.length + 1));
         stepX = -1;
         stepY = 1;
+      } else {
+        // Place diagonally bottom-left to top-right
+        startX = Math.floor(Math.random() * (width - word.length + 1));
+        startY = Math.floor(Math.random() * (height - word.length + 1)) + word.length - 1;
+        stepX = 1;
+        stepY = -1;
       }
 
       if (canPlaceWord(word, startX, startY, stepX, stepY)) {
@@ -112,17 +103,20 @@ export function generateCrossword(words, alphabetList) {
         placed = true;
       }
     }
-  }
+  });
 
-  // Fill the remaining empty spaces with random alphabet characters
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      if (grid[i][j] === '') {
-        const randomIndex = Math.floor(Math.random() * alphabetList.length);
-        grid[i][j] = alphabetList[randomIndex];
+  // Fill the remaining empty spaces with random alphabets
+  for (let i = 0; i < height; i++) {
+    for (let j = 0; j < width; j++) {
+      if (crossword[i][j] === ' ') {
+        const randomIndex = Math.floor(Math.random() * alphabets.length);
+        crossword[i][j] = alphabets[randomIndex];
       }
     }
   }
 
-  return grid;
+  // Convert the crossword grid to JSON
+  const crosswordJSON = JSON.stringify(crossword);
+
+  return crossword;
 }
