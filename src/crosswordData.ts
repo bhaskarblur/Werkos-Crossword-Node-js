@@ -1,5 +1,8 @@
 
-export const topicList = ["country","beach"];
+export const topicList = {"categoriesList"
+:[{"name":"category1", topicList: ["country","beach"]},
+{"name":"category2", topicList: ["country","beach"]}
+]};
 
 export const countryCrossword = {
     

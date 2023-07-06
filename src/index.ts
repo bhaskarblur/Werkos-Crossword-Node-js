@@ -130,7 +130,7 @@ else {
         return;
     }
     if(req.body.language === 'en') {
-        const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+       
 
         const data = JSON.stringify({"allWords": words});
         var _data = JSON.parse(data);
@@ -139,7 +139,7 @@ else {
         for(let i = 0; i < req.body.words_limit; i++) {
             limited_List.push(randomLimited(limited_List, words));
          }
-
+         const crosswordGrid = generateCrossword(limited_List,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
          _data.language = "English, en"
          _data.limited_words= jcc.upperCaseAll(limited_List);
          _data.words_grid= crosswordGrid;
@@ -148,7 +148,7 @@ else {
         res.send(_data);
     }
    else if(req.body.language === 'es') {
-    const crosswordGrid = generateCrossword(words,'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ');
+   
 
     const data = JSON.stringify({"allWords": words});
     var _data = JSON.parse(data);
@@ -156,7 +156,8 @@ else {
 
    for(let i = 0; i < req.body.words_limit; i++) {
             limited_List.push(randomLimited(limited_List, words));
-         }
+         } 
+         const crosswordGrid = generateCrossword(limited_List,'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ');
      _data.language = "Spanish, es"
      _data.limited_words= jcc.upperCaseAll(limited_List);
      _data.words_grid= crosswordGrid;
@@ -168,9 +169,10 @@ else {
 
 
   app.post('/randomgenerated_crossword', async (req, res) => {
+    var topic='beach';
+    var category = topicList.categoriesList[(Math.floor(Math.random() * topicList.categoriesList.length))];
+    var topic = category.topicList[(Math.floor(Math.random() * category.topicList.length))]
 
-    var topic = topicList[(Math.floor(Math.random() * topicList.length))];
-    console.log(topic);
     let string : any;
     let json:any;
     if(req.body.language === 'en') {
@@ -390,4 +392,150 @@ app.post('/getLeaderboards', async(req, res) => {
             res.status(403).send({'message':'Invalid accessToken'})
         }
     }
+});
+
+app.post('/getcatstopics', function (req, res) {
+    var data={};
+    data = topicList;
+    data['message'] = "All categories & topics are available!";
+    res.status(200).send(data);
+});
+
+app.post('/createGame', async function (req, res) {
+    var userId= req.body.userId;
+    var gameName:string= req.body.gameName;
+    var totalWords = req.body.totalWords;
+    var limitedWords = req.body.limitedWords;
+    var language = req.body.gameLanguage;
+    var shareCode = generateUserName(  gameName.toLowerCase().replaceAll(" ","") , 4);
+
+    var allWords:[]=    JSON.parse(req.body.allWords);
+    var correctWords:[] = JSON.parse( req.body.correctWords);
+    var incorrectWords:[] = JSON.parse( req.body.incorrectWords);
+
+    const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
+
+    if(data.rows.length <1) {   
+        res.status(403).send({'message':'Invalid userId'})
+    }
+    else {
+
+        if(data.rows[0].accesstoken === req.body.accessToken) {
+
+            const final= await pool.query('INSERT INTO systemgames VALUES(default, default,$1,$2,$3, $4,$5,$6); '
+            , [gameName, totalWords, shareCode, limitedWords, language, userId])
+
+            if(final.rowCount !=1) {
+                res.status(400).send({'message':'There was an error1!'})
+            }
+            else {
+         
+                const data= await pool.query('SELECT * FROM systemgames where gamename=$1 AND totalwords= $2 AND sharecode=$3;'
+                , [gameName, totalWords, shareCode]);
+
+                for(let i=0;i<allWords.length;i++) {
+                    const word= allWords[i];
+                    const addWord = await pool.query('INSERT INTO systemgameallwords VALUES(default, $1, $2)', [data.rows[0].gameid, word]);
+
+                    if(addWord.rowCount !=1) {
+                        res.status(400).send({'message':'There was an error2!'})
+                    }
+                
+
+                }
+
+                for(let j=0;j<correctWords.length;j++) {
+                    const word= correctWords[j];
+                    const addWord = await pool.query('INSERT INTO systemgamecorrectwords VALUES(default, $1, $2)', [data.rows[0].gameid, word]);
+
+                    if(addWord.rowCount !=1) {
+                        res.status(400).send({'message':'There was an error3!'})
+                    }
+           
+
+                }
+
+                for(let k=0;k<incorrectWords.length;k++) {
+                    const word= incorrectWords[k];
+                    const addWord = await pool.query('INSERT INTO systemgameincorrectwords VALUES(default, $1, $2)', [data.rows[0].gameid, word]);
+
+                    if(addWord.rowCount !=1) {
+                        res.status(400).send({'message':'There was an error4!'})
+                    }
+                  
+
+                }
+                var newData={};
+                newData['gameDetails']= data.rows[0];
+                newData['gameAllWords'] = allWords;
+                newData['gameCorrectWords'] = correctWords;
+                newData['gameIncorrectWords'] = incorrectWords;
+                newData['message'] = 'game created successfully';
+                res.status(200).send(newData);
+            }
+        }
+        else {
+            res.status(403).send({'message':'Invalid accessToken'})
+        }
+    }
+})
+
+app.post('/getAllUserGames', async (req, res) => {
+
+    const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
+
+    if(data.rows.length <1) {   
+        res.status(403).send({'message':'Invalid userId'})
+    }
+    else {
+
+        if(data.rows[0].accesstoken === req.body.accessToken) {
+
+            const allwords={}
+            const data= await pool.query
+            ('SELECT * FROM systemgames where userid=$1;'
+                , [req.body.userId]);
+
+
+                var newData ={};
+                newData['message'] = 'All user game returned successfully';
+                newData['allGames'] = data.rows;
+               
+                res.status(200).send(newData);
+            
+        }
+        else {
+            res.status(403).send({'message':'Invalid accessToken'})
+        }
+    }
+});
+
+app.post('/getGameWords', async (req, res) => {
+    const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
+
+    if(data.rows.length <1) {   
+        res.status(403).send({'message':'Invalid userId'})
+    }
+    else {
+
+        if(data.rows[0].accesstoken === req.body.accessToken) {
+
+    const allwords = await pool.query
+    ('SELECT * FROM systemgameallwords WHERE gameid=$1'
+    ,[req.body.gameid]);
+
+    const corrwords = await pool.query
+    ('SELECT * FROM systemgamecorrectwords WHERE gameid=$1'
+    ,[req.body.gameid]);
+
+    const incorrwords = await pool.query
+    ('SELECT * FROM systemgameincorrectwords WHERE gameid=$1'
+    ,[req.body.gameid]);
+
+    res.send({'message':'All word details',"allWords":allwords.rows, "correctWords":corrwords.rows, "incorrectWords":incorrwords.rows});
+}
+else {
+    res.status(403).send({'message':'Invalid accessToken'})
+}
+}
 });
