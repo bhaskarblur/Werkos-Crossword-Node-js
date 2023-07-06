@@ -7,7 +7,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { countryCrossword, topicList, beachCrossword } from './crosswordData';
 import { generateCrossword } from './CrosswordAlgo2';
+import { randomLimited, englishAlphabets, spanishAlphabets } from './helper';
 import _, { map } from 'underscore';
+import { getUserName } from './database';
 const jcc = require('json-case-convertor');
 const PORT = 10000;
 const app= express();
@@ -27,13 +29,6 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 
 const server= http.createServer(app);
-
-const englishAlphabets = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-"P", "Q", "R", "S","T", "U", "V","W", "X", "Y", "Z"];
-
-const spanishAlphabets = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "Ñ", "O",
-"P", "Q", "R", "S","T", "U", "V","W", "X", "Y", "Z"];
-
 
 
 server.listen(PORT, () => {
@@ -227,16 +222,9 @@ else {
 }
   });
 
+app.get('/getUserName', (req, res) => {
+    res.send(getUserName());
+});
 
-  function randomLimited(limited_List:any[], words:any[]) {
-    var wordReturn;
-
-    wordReturn = words.splice(Math.floor(Math.random() * (words.length + 1)), 1)[0];
-    if(wordReturn === undefined) {
-       return wordReturn = randomLimited(limited_List, words)
-    }
-   // console.log(wordReturn)
-  return wordReturn;
-  }
 
   
