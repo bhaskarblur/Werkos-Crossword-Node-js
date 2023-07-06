@@ -33,6 +33,8 @@
     "json-case-convertor": "^1.4.0",
     "jsonwebtoken": "^9.0.1",
     "lodash": "^4.17.21",
+    "pg": "^8.11.1",
+    "postgresql": "^0.0.1",
     "translate": "^2.0.2",
     "underscore": "^1.13.6"
   }
