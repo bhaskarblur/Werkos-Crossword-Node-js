@@ -14,7 +14,7 @@ import { generateAccessToken, generateUserName } from "./helper";
 const Pool = require('pg').Pool
 const pool = new Pool({
   user: 'crossword2023',
-  host: 'dpg-cik5ep6nqql0l1vtktbg-a',
+  host: 'dpg-cik5ep6nqql0l1vtktbg-a.singapore-postgres.render.com',
   database: 'crossword_y0sa',
   password: 'TsPTjHou29lCalXthmfxvq2sLtCppVYH',
   port: 5432,
