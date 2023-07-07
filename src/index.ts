@@ -1024,6 +1024,27 @@ app.post('/updateUserSubscriptionStatus', async (req, res) => {
 
 });
 
+app.post('/getSubscriptionStatus', async (req, res) => {
+    var status = req.body.subStatus;
+    const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
+
+    if(data.rows.length <1) {   
+        res.status(403).send({'message':'Invalid userId'})
+    }
+    else {
+
+        if(data.rows[0].accesstoken === req.body.accessToken) {
+
+            const data = await pool.query('SELECT * FROM subcriptionstatus WHERE userid=$1', [req.body.userId]);
+            const row = data.rows[0];
+
+            res.status(200).send({'message':'Subcription returned successfully', 'subscriptionDetails':row});
+        
+        }
+}
+
+})
+
 app.post('/addGameRating', async (req, res) => {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
