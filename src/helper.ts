@@ -1,3 +1,5 @@
+import { json } from "body-parser";
+
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
 var crypto = require('crypto');
@@ -9,7 +11,6 @@ export const spanishAlphabets = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J
 
 export function randomLimited(limited_List:any[], words:any[]) {
     var wordReturn;
-
     wordReturn = words.splice(Math.floor(Math.random() * (words.length + 1)), 1)[0];
     if(wordReturn === undefined) {
        return wordReturn = randomLimited(limited_List, words)
