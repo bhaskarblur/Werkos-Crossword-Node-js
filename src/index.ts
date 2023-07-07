@@ -636,6 +636,8 @@ app.post('/createGame', async function (req, res) {
     var totalWords = req.body.totalWords;
     var limitedWords = req.body.limitedWords;
     var language = req.body.gameLanguage;
+    var gameType = req.body.gameType;
+    var searchType = req.body.searchType;
     var shareCode = generateUserName(  gameName.toLowerCase().replaceAll(" ","") , 4);
 
     var allWords:[]=    JSON.parse(req.body.allWords);
@@ -651,8 +653,8 @@ app.post('/createGame', async function (req, res) {
 
         if(data.rows[0].accesstoken === req.body.accessToken) {
 
-            const final= await pool.query('INSERT INTO systemgames VALUES(default, default,$1,$2,$3, $4,$5,$6); '
-            , [gameName, totalWords, shareCode, limitedWords, language, userId])
+            const final= await pool.query('INSERT INTO systemgames VALUES(default, default,$8,$1,$2,null,null, $3, $4,$5,$7, $6); '
+            , [gameName,gameType,searchType, totalWords, shareCode, limitedWords, language, userId])
 
             if(final.rowCount !=1) {
                 res.status(400).send({'message':'There was an error1!'})
@@ -716,7 +718,8 @@ app.post('/editGame', async function (req, res) {
     var totalWords = req.body.totalWords;
     var limitedWords = req.body.limitedWords;
     var language = req.body.gameLanguage;
-    
+    var gameType = req.body.gameType;
+    var searchType = req.body.searchType;
     var shareCode = generateUserName(  gameName.toLowerCase().replaceAll(" ","") , 4);
 
     var allWords:[]=    JSON.parse(req.body.allWords);
@@ -732,8 +735,11 @@ app.post('/editGame', async function (req, res) {
 
         if(data.rows[0].accesstoken === req.body.accessToken) {
 
-            const final= await pool.query('UPDATE systemgames SET gamename=$1, totalwords=$2, sharecode= $3, limitedwords = $4, gamelanguage = $5 WHERE gameid=$6; '
-            , [gameName, totalWords, shareCode, limitedWords, language, gameId])
+            const final= await pool.query
+            ('UPDATE systemgames SET gamename=$1, totalwords=$2, sharecode= $3, limitedwords = $4, gamelanguage = $5, gametype=$7, searchtype=$8 WHERE gameid=$6; '
+            , [gameName, totalWords, shareCode, limitedWords, language, gameId, gameType, searchType])
+
+
 
             if(final.rowCount !=1) {
                 res.status(400).send({'message':'There was an error1!'})
