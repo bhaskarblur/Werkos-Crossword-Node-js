@@ -18,6 +18,7 @@ const pool = new Pool({
   database: 'crossword_y0sa',
   password: 'TsPTjHou29lCalXthmfxvq2sLtCppVYH',
   port: 5432,
+  ssl: true,
 })
 const jcc = require('json-case-convertor');
 const PORT = 10000;
