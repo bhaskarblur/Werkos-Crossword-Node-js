@@ -212,7 +212,7 @@ app.post('/topicwise_crossword', async (req, res) => {
             }
            
             const singleGame = allGames.rows[Math.floor(Math.random() * (allGames.rows.length))];
-            const gameId= singleGame.gameid;
+            const gameId= singleGame?.gameid;
             console.log(gameId);
 
             const allwords = await pool.query
@@ -249,13 +249,13 @@ app.post('/topicwise_crossword', async (req, res) => {
      
 
             var limited_words =[];
-            if(singleGame.limitedwords !==null) {
+            if(singleGame?.limitedwords !==null) {
                 var num;
-                if(allWords.length< singleGame.limitedwords) {
+                if(allWords.length< singleGame?.limitedwords) {
                     num =allWords.length;
                 }
                 else{
-                    num =  singleGame.limitedwords;
+                    num =  singleGame?.limitedwords;
                 }
             for(let i=0; i<num; i++) {
                 limited_words.push(randomLimited(limited_words, allWords));
@@ -268,7 +268,7 @@ app.post('/topicwise_crossword', async (req, res) => {
         
 
             var crossword;
-            if(singleGame.gamelanguage === 'es') {
+            if(singleGame?.gamelanguage === 'es') {
             crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
         }
         else {
@@ -310,7 +310,7 @@ app.post('/topicwise_crossword', async (req, res) => {
             const allGames = await pool.query
             ('select * from systemgames where gametype=$1 AND gamelanguage=$2;',['system',req.body.language] );
             const singleGame = allGames.rows[Math.floor(Math.random() * (allGames.rows.length))];
-            const gameId= singleGame.gameid;
+            const gameId= singleGame?.gameid;
             console.log(gameId);
 
             const allwords = await pool.query
@@ -351,7 +351,7 @@ app.post('/topicwise_crossword', async (req, res) => {
         }            
 
             var crossword;
-            if(singleGame.gamelanguage === 'es') {
+            if(singleGame?.gamelanguage === 'es') {
             crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
         }
         else {
@@ -365,7 +365,7 @@ app.post('/topicwise_crossword', async (req, res) => {
         response['allWords'] = allwords.rows;
         response['limitedWords'] = limited_words;
 
-        if(singleGame.searchtype === 'challenge'){
+        if(singleGame?.searchtype === 'challenge'){
         response['correctWords'] = correctWords;
         response['incorrectWords'] = incorrectWords;
         }
@@ -648,20 +648,20 @@ app.post('/getcatstopics', async function (req, res) {
 });
 
 app.post('/createGame', async function (req, res) {
-    var userId= req.body.userId;
-    var gameName:string= req.body.gameName;
-    var totalWords = req.body.totalWords;
-    var limitedWords = req.body.limitedWords;
-    var language = req.body.gameLanguage;
-    var gameType = req.body.gameType;
-    var searchType = req.body.searchType;
+    var userId= req.body?.userId;
+    var gameName:string= req.body?.gameName;
+    var totalWords = req.body?.totalWords;
+    var limitedWords = req.body?.limitedWords;
+    var language = req.body?.gameLanguage;
+    var gameType = req.body?.gameType;
+    var searchType = req.body?.searchType;
     var shareCode = generateUserName(  gameName.toLowerCase().replaceAll(" ","") , 4);
 
-    var allWords:[]=    JSON.parse(req.body.allWords);
-    var correctWords:[] = JSON.parse( req.body.correctWords);
-    var incorrectWords:[] = JSON.parse( req.body.incorrectWords);
+    var allWords:[]=    JSON.parse(req.body?.allWords);
+    var correctWords:[] = JSON.parse( req.body?.correctWords);
+    var incorrectWords:[] = JSON.parse( req.body?.incorrectWords);
 
-    const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
+    const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body?.userId]);
 
     if(data.rows.length <1) {   
         res.status(403).send({'message':'Invalid userId'})
@@ -729,28 +729,28 @@ app.post('/createGame', async function (req, res) {
 });
 
 app.post('/editGame', async function (req, res) {
-    var userId= req.body.userId;
-    var gameId:string= req.body.gameId;
-    var gameName:string= req.body.gameName;
-    var totalWords = req.body.totalWords;
-    var limitedWords = req.body.limitedWords;
-    var language = req.body.gameLanguage;
-    var gameType = req.body.gameType;
-    var searchType = req.body.searchType;
+    var userId= req.body?.userId;
+    var gameId:string= req.body?.gameId;
+    var gameName:string= req.body?.gameName;
+    var totalWords = req.body?.totalWords;
+    var limitedWords = req.body?.limitedWords;
+    var language = req.body?.gameLanguage;
+    var gameType = req.body?.gameType;
+    var searchType = req.body?.searchType;
     var shareCode = generateUserName(  gameName.toLowerCase().replaceAll(" ","") , 4);
 
-    var allWords:[]=    JSON.parse(req.body.allWords);
-    var correctWords:[] = JSON.parse( req.body.correctWords);
-    var incorrectWords:[] = JSON.parse( req.body.incorrectWords);
+    var allWords:[]=    JSON.parse(req.body?.allWords);
+    var correctWords:[] = JSON.parse( req.body?.correctWords);
+    var incorrectWords:[] = JSON.parse( req.body?.incorrectWords);
 
-    const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
+    const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body?.userId]);
 
     if(data.rows.length <1) {   
         res.status(403).send({'message':'Invalid userId'})
     }
     else {
 
-        if(data.rows[0].accesstoken === req.body.accessToken) {
+        if(data.rows[0].accesstoken === req.body?.accessToken) {
 
             const final= await pool.query
             ('UPDATE systemgames SET gamename=$1, totalwords=$2, sharecode= $3, limitedwords = $4, gamelanguage = $5, gametype=$7, searchtype=$8 WHERE gameid=$6; '
