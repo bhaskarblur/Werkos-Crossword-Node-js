@@ -64,7 +64,8 @@ app.post('/topicwise_crossword', async (req, res) => {
 
     var data:any = null;
         data = await pool.query
-        ('SELECT * FROM systemgames WHERE topic=$1 AND category=$2;',[topic, category]);
+        ('SELECT * FROM systemgames WHERE topic=$1 AND category=$2 AND gamelanguage=$3;',[topic, category,
+        req.body.language]);
   
         const row= data.rows[Math.floor(Math.random() * (data.rows.length))];
         const allwords = await pool.query
@@ -202,7 +203,9 @@ app.post('/topicwise_crossword', async (req, res) => {
         if(token.rows[0].accesstoken === req.body.accessToken) {
             var allGames ;
             if(req.body.type === "challenge") {
-                 allGames = await pool.query('select * from systemgames where gametype=$1 AND searchtype=$2;',['public', 'challenge'] );
+                 allGames = await pool.query
+                 ('select * from systemgames where gametype=$1 AND searchtype=$2 AND gamelanguage=$3;',
+                 ['public', 'challenge', req.body.language] );
             }
             else {
                  allGames = await pool.query('select * from systemgames where gametype=$1;',['public'] );
@@ -304,7 +307,8 @@ app.post('/topicwise_crossword', async (req, res) => {
     else {
         if(token.rows[0].accesstoken === req.body.accessToken) {
 
-            const allGames = await pool.query('select * from systemgames where gametype=$1;',['system'] );
+            const allGames = await pool.query
+            ('select * from systemgames where gametype=$1 AND gamelanguage=$2;',['system',req.body.language] );
             const singleGame = allGames.rows[Math.floor(Math.random() * (allGames.rows.length))];
             const gameId= singleGame.gameid;
             console.log(gameId);
@@ -635,11 +639,12 @@ app.post('/getLeaderboards', async(req, res) => {
     }
 });
 
-app.post('/getcatstopics', function (req, res) {
-    var data={};
-    data = topicList;
-    data['message'] = "All categories & topics are available!";
-    res.status(200).send(data);
+app.post('/getcatstopics', async function (req, res) {
+    var data;
+    data = await pool.query('SELECT * FROM catstopics;');
+    const rows= data.rows;
+    res.status(200).send({'message':'All categories & topics!', 'categoriesTopics':rows});
+
 });
 
 app.post('/createGame', async function (req, res) {
