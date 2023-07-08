@@ -543,6 +543,7 @@ app.post('/addUserGameRecord', async function (req, res) {
     const timeScore = req.body.timeScore;
     const crosswordScore= req.body.crosswordScore;
     const timeScoreText=req.body.timeScoreText;
+    const playerName = req.body.playerName;
 
     const data= await pool.query('SELECT * FROM usertable WHERE id= $1;', [userid]);
 
@@ -575,8 +576,8 @@ app.post('/addUserGameRecord', async function (req, res) {
               
             }
             const saveRecord = await pool.
-            query("INSERT INTO gameleaderboards VALUES(default,$1, $2, $3,$4, $5 )",[gameId,
-            userid,timeScore, crosswordScore, timeScoreText])
+            query("INSERT INTO gameleaderboards VALUES(default,$1, $2, $3,$4, $5, $6 )",[gameId,
+            userid,timeScore, crosswordScore, timeScoreText, playerName])
 
             if(saveRecord.rowCount !=1) {
                 res.status(400).send({'message':'There was an error!'})
@@ -604,16 +605,27 @@ app.post('/getLeaderboards', async(req, res) => {
         if(data.rows[0].accesstoken === req.body.accessToken) {
 
             const data_= await pool.query
-            ('SELECT * FROM gameleaderboards WHERE gameid= $1 ORDER BY timescore Limit 10;', [req.body.gameId]);
+            ('SELECT * FROM gameleaderboards WHERE gameid= $1 ORDER BY timescore ASC, crosswordscore DESC Limit 10;', [req.body.gameId]);
             
-            var FinalData = {'message':'leaderboards fetched successfully'};
+          
         
             const name = await pool.query ('SELECT * FROM systemgames WHERE gameid= $1',[req.body.gameId]);
  
+            var FinalData = {'message':'leaderboards fetched successfully'};
             if(name.rows[0]!=null){
             const name_ = name.rows[0].gamename;
+            var totalwords=0;
+            if(name.rows[0].limitedwords!=null){ 
+                totalwords = name.rows[0].limitedwords;
+            }
+            else {
+                totalwords = name.rows[0].totalwords;
+            }
             FinalData['gameName']=name_;
+            FinalData['totalWords']=totalwords;
+
         }
+
             FinalData['leaderboards'] = data_.rows;
             res.status(200).send(FinalData);
         }
