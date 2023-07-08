@@ -665,7 +665,7 @@ app.post('/createGame', async function (req, res) {
 
         if(data.rows[0].accesstoken === req.body.accessToken) {
 
-            const final= await pool.query('INSERT INTO systemgames VALUES(default, default,$8,$1,$2,null,null, $3, $4,$5,$7, $6); '
+            const final= await pool.query('INSERT INTO systemgames VALUES(default, default,$8,$1,$2,null,null, $3, $4,$5,$7, $6, null); '
             , [gameName,gameType,searchType, totalWords, shareCode, limitedWords, language, userId])
 
             if(final.rowCount !=1) {
@@ -1065,7 +1065,6 @@ app.post('/getSubscriptionStatus', async (req, res) => {
 
 app.post('/addGameRating', async (req, res) => {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
-
     if(data.rows.length <1) {   
         res.status(403).send({'message':'Invalid userId'})
     }
@@ -1073,8 +1072,13 @@ app.post('/addGameRating', async (req, res) => {
 
         if(data.rows[0].accesstoken === req.body.accessToken) {
 
-            await pool.query('INSERT INTO gameRatings VALUES(default, $1, $2, $3);', [
+          const addrating=  await pool.query('INSERT INTO gameRatings VALUES(default, $1, $2, $3);', [
                 req.body.gameid, req.body.userId, req.body.rating]);
+
+                const avg_rating = await pool.query('SELECT AVG(rating) FROM gameRatings WHERE gameid=$1;',[req.body.gameid]);
+                const number_avg = parseFloat(String( avg_rating.rows[0].avg).toString().substring(0,3));
+                 
+                await pool.query('UPDATE systemgames set avgratings=$1 where gameid=$2;',[number_avg, req.body.gameid ]);
 
                 res.status(200).send({'message': 'Added rating to game successfully!'});
         }
