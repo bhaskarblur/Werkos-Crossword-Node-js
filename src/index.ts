@@ -13,13 +13,12 @@ import { getUserName, setUserName } from './database';
 import { generateAccessToken, generateUserName } from "./helper";
 const Pool = require('pg').Pool
 const pool = new Pool({
-  user: 'crossword2023',
-  host: 'dpg-cik5ep6nqql0l1vtktbg-a.singapore-postgres.render.com',
-  database: 'crossword_y0sa',
-  password: 'TsPTjHou29lCalXthmfxvq2sLtCppVYH',
+  user: 'postgres',
+  host: 'crossword-db1.cqh72de7kqjq.us-east-1.rds.amazonaws.com',
+  database: 'postgres',
+  password: 'RWSryOPhfHmTgWHcLJcO',
   port: 5432,
-  ssl: true,
-})
+});
 const jcc = require('json-case-convertor');
 const PORT = 10000;
 const app= express();
@@ -45,6 +44,9 @@ server.listen(PORT, () => {
     console.log("Server listening on port: "+PORT);
 });
 
+app.get('/', (req, res) => {
+    res.send('Crossword app for mobile. Download now.');
+  });
 
 
 app.get('/english_alphabets', (req, res) => {
