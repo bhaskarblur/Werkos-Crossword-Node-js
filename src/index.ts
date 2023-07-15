@@ -574,7 +574,7 @@ app.post('/addUserGameRecord', async function (req, res) {
                 let mm_:any = datenow_.getMonth() + 1; // Months start at 0!
                 let dd_:any = datenow_.getDate() ;
     
-             const formattedToday = dd_ + '/' + mm_ + '/' + yyyy_;
+             const formattedToday = yyyy_ + '/' + mm_ + '/' + dd_;
                         await pool.query('UPDATE userTable SET gamesendeddatetime= $1 where id=$2;',[datenow_, userid])
                     }
                     await pool.query('UPDATE userTable SET gamesleft=$1 where id=$2;',[data_, userid]);
@@ -1012,8 +1012,8 @@ app.post('/updateUserSubscriptionStatus', async (req, res) => {
             let mm_:any = futureDate.getMonth() + 1; // Months start at 0!
             let dd_:any = futureDate.getDate();
 
-            formattedFuture = dd_ + '/' + mm_ + '/' + yyyy_;
-            formattedToday = dd + '/' + mm + '/' + yyyy;
+            formattedFuture = yyyy_+ '/' + mm_ + '/' + dd_;
+            formattedToday = yyyy + '/' + mm + '/' + dd;
             console.log(formattedToday); 
             console.log(formattedFuture); 
             }
@@ -1023,8 +1023,8 @@ app.post('/updateUserSubscriptionStatus', async (req, res) => {
                 let mm_:any = futureDate.getMonth() + 1; // Months start at 0!
                 let dd_:any = futureDate.getDate();
     
-                formattedFuture = dd_ + '/' + mm_ + '/' + yyyy_;
-                formattedToday = dd + '/' + mm + '/' + yyyy;
+                formattedFuture = yyyy_+ '/' + mm_ + '/' + dd_;
+                formattedToday = yyyy + '/' + mm + '/' + dd;
                 console.log(formattedToday); 
                 console.log(formattedFuture); 
             }
@@ -1033,7 +1033,7 @@ app.post('/updateUserSubscriptionStatus', async (req, res) => {
                 formattedToday = null;
             }
 
-            await pool.query('UPDATE subcriptionstatus SET  subscriptiontype=$4 , startdate=$1 , enddate=$2 WHERE userid=$3', 
+            await pool.query('UPDATE subcriptionstatus SET  subscriptiontype=$4 , startdate=$1 , enddate=$2 WHERE userid=$3;', 
             [formattedToday, formattedFuture, req.body.userId, status])
 
             const parseData = {'message':String('Updated subscription Status to ')
