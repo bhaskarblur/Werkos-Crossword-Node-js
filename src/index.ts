@@ -59,7 +59,8 @@ app.get('/spanish_alphabets', (req, res) => {
   });
 
 app.post('/topicwise_crossword', async (req, res) => {
-
+    try {
+   
     var topic = req.body.topic;
     var category = req.body.category;
     var type= req.body.type;
@@ -147,9 +148,18 @@ app.post('/topicwise_crossword', async (req, res) => {
     response['crossword_grid'] = finalWords;
 
     res.status(200).send(response);
+
+         
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
   });
 
   app.post('/generateany_crossword', async (req, res) => {
+
+    try {
     var allWords = jcc.upperCaseAll(req.body.all_words);
     var corrWords = jcc.upperCaseAll(req.body.correct_words);
     var incorrWords = jcc.upperCaseAll(req.body.incorrect_words);
@@ -190,12 +200,17 @@ app.post('/topicwise_crossword', async (req, res) => {
     response['crossword_grid'] = crossword;
 
     res.status(200).send(response);
-
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 
 
   });
   app.post('/randomusergenerated_crossword',async (req, res) => {
 
+    try{
     const token = await pool.query('select * from usertable where id=$1', [req.body.userId]);
 
     if(token.rows.length <1) {
@@ -297,10 +312,18 @@ app.post('/topicwise_crossword', async (req, res) => {
     }
 
 }
+
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
   });
 
 
   app.post('/randomsystemgenerated_crossword', async (req, res) => {
+
+    try{
     const token = await pool.query('select * from usertable where id=$1', [req.body.userId]);
 
     if(token.rows.length <1) {
@@ -380,10 +403,18 @@ app.post('/topicwise_crossword', async (req, res) => {
     }
 
 }
+
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
   });
 
 
 app.get('/getUserName', async (req, res) => {
+    
+    try{
     var userName= generateUserName("user", 6);
       var token = generateAccessToken(userName);
       const  data  =  await pool.query(`SELECT * FROM usertable WHERE username= $1;`, [userName]); //Checking if user already exists
@@ -425,10 +456,17 @@ app.get('/getUserName', async (req, res) => {
   
         
       }
+      }
+      catch (err)
+      {
+          res.status(400).send({'message':err.message});
+      }
     
 });
 
 app.post('/changeUserName', async (req, res) => {
+
+    try{
 
     var userName= req.body.userName;
     var userId=  req.body.userId;
@@ -465,10 +503,16 @@ app.post('/changeUserName', async (req, res) => {
             res.send({"message": "Invalid accessToken"});
         }
     }
-  
+  }
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
       
 app.post('/getUserInfo', async (req, res) => {
+
+    try{
     const userid=req.body.userId;
 
 
@@ -541,9 +585,16 @@ app.post('/getUserInfo', async (req, res) => {
             res.status(403).send({'message':'Invalid accessToken'})
         }
     }
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/addUserGameRecord', async function (req, res) {
+
+    try {
     const userid=req.body.userId;
     const gameId=req.body.gameId;
     const timeScore = req.body.timeScore;
@@ -597,10 +648,18 @@ app.post('/addUserGameRecord', async function (req, res) {
             res.status(403).send({'message':'Invalid accessToken'})
         }
     }
+
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 })
 
   
 app.post('/getLeaderboards', async(req, res) => {
+
+    try{
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
@@ -639,17 +698,30 @@ app.post('/getLeaderboards', async(req, res) => {
             res.status(403).send({'message':'Invalid accessToken'})
         }
     }
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/getcatstopics', async function (req, res) {
+
+    try{
     var data;
     data = await pool.query('SELECT * FROM catstopics;');
     const rows= data.rows;
     res.status(200).send({'message':'All categories & topics!', 'categoriesTopics':rows});
-
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/createGame', async function (req, res) {
+
+    try{
     var userId= req.body?.userId;
     var gameName:string= req.body?.gameName;
     var totalWords = req.body?.totalWords;
@@ -728,9 +800,17 @@ app.post('/createGame', async function (req, res) {
             res.status(403).send({'message':'Invalid accessToken'})
         }
     }
+
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/editGame', async function (req, res) {
+
+    try{
     var userId= req.body?.userId;
     var gameId:string= req.body?.gameId;
     var gameName:string= req.body?.gameName;
@@ -837,10 +917,17 @@ app.post('/editGame', async function (req, res) {
             res.status(403).send({'message':'Invalid accessToken'})
         }
     }
+
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/getAllUserGames', async (req, res) => {
 
+    try{
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
@@ -867,9 +954,16 @@ app.post('/getAllUserGames', async (req, res) => {
             res.status(403).send({'message':'Invalid accessToken'})
         }
     }
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/getGameWords', async (req, res) => {
+
+    try{
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
@@ -897,9 +991,16 @@ else {
     res.status(403).send({'message':'Invalid accessToken'})
 }
 }
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/getSingleUserGames', async (req, res) => {
+
+    try{
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
@@ -942,9 +1043,16 @@ app.post('/getSingleUserGames', async (req, res) => {
         }
         }
     }
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 })
 
 app.post('/getGameByCode', async (req, res) => {
+
+    try{
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
@@ -975,9 +1083,15 @@ app.post('/getGameByCode', async (req, res) => {
 
         }
     }
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/updateUserSubscriptionStatus', async (req, res) => {
+    try{
     var status = req.body.subStatus;
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
@@ -1046,10 +1160,16 @@ app.post('/updateUserSubscriptionStatus', async (req, res) => {
         res.status(403).send({'message':'Invalid accessToken'})
     }
     }
-
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/getSubscriptionStatus', async (req, res) => {
+
+    try{
     var status = req.body.subStatus;
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
@@ -1067,10 +1187,15 @@ app.post('/getSubscriptionStatus', async (req, res) => {
         
         }
 }
-
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 })
 
 app.post('/addGameRating', async (req, res) => {
+    try{
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
     if(data.rows.length <1) {   
         res.status(403).send({'message':'Invalid userId'})
@@ -1090,9 +1215,15 @@ app.post('/addGameRating', async (req, res) => {
                 res.status(200).send({'message': 'Added rating to game successfully!'});
         }
     }
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/getGameRating', async (req, res) => {
+    try{
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
@@ -1109,4 +1240,9 @@ app.post('/getGameRating', async (req, res) => {
              'totalRating':number_total});
         }
     }
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
