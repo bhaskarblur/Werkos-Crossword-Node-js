@@ -441,7 +441,7 @@ app.get('/getUserName', async (req, res) => {
                 const subsStatus =   await pool.query('INSERT INTO subcriptionstatus VALUES(default, $1, $2, null, null);', 
                 [id.rows[0].id, 'none']);
                
-            res.send({'message:':'user created successfully!', "userId": id.rows[0].id,
+            res.send({'message':'user created successfully!', "userId": id.rows[0].id,
             "userName":userName, "accessToken":token, "gamesLeft":50, 'subcriptionStatus':"none"});
            
           }
@@ -494,7 +494,7 @@ app.post('/changeUserName', async (req, res) => {
             
             else {
                
-            res.send({'message:':'userName updated successfully!', "userId": userId,
+            res.send({'message':'userName updated successfully!', "userId": userId,
             "userName":userName});
             }
           }
@@ -722,6 +722,7 @@ catch (err)
 app.post('/createGame', async function (req, res) {
 
     try{
+   
     var userId= req.body?.userId;
     var gameName:string= req.body?.gameName;
     var totalWords = req.body?.totalWords;
@@ -732,8 +733,15 @@ app.post('/createGame', async function (req, res) {
     var shareCode = generateUserName(  gameName.toLowerCase().replaceAll(" ","") , 4);
 
     var allWords:[]=    JSON.parse(req.body?.allWords);
-    var correctWords:[] = JSON.parse( req.body?.correctWords);
-    var incorrectWords:[] = JSON.parse( req.body?.incorrectWords);
+
+    var correctWords:[];
+    var incorrectWords:[];
+    if(req.body.correctWords!==undefined) {
+        correctWords = JSON.parse( req.body?.correctWords);
+        incorrectWords = JSON.parse( req.body?.incorrectWords);
+    }
+    
+  
 
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body?.userId]);
 
@@ -766,6 +774,7 @@ app.post('/createGame', async function (req, res) {
 
                 }
 
+                if(req.body.correctWords !==undefined) {
                 for(let j=0;j<correctWords.length;j++) {
                     const word= correctWords[j];
                     const addWord = await pool.query('INSERT INTO systemgamecorrectwords VALUES(default, $1, $2)', [data.rows[0].gameid, word]);
@@ -785,8 +794,9 @@ app.post('/createGame', async function (req, res) {
                         res.status(400).send({'message':'There was an error4!'})
                     }
                   
-
                 }
+
+            }
                 var newData={};
                 newData['gameDetails']= data.rows[0];
                 newData['gameAllWords'] = allWords;
@@ -939,8 +949,8 @@ app.post('/getAllUserGames', async (req, res) => {
 
             const allwords={}
             const data= await pool.query
-            ('SELECT * FROM systemgames where userid=$1;'
-                , [req.body.userId]);
+            ('SELECT * FROM systemgames where userid=$1 AND searchtype=$2;'
+                , [req.body.userId, req.body.type]);
 
 
                 var newData ={};
@@ -1050,6 +1060,70 @@ catch (err)
 }
 })
 
+app.post('/duplicateGame', async (req, res) => {
+    
+    try{
+        const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
+    
+        if(data.rows.length <1) {   
+            res.status(403).send({'message':'Invalid userId'})
+        }
+        else {
+    
+            const game = await pool.query('SELECT * FROM systemgames WHERE gameId =$1',[req.body.gameid]);
+    
+            if(game.rows.length <1) {   
+                res.status(403).send({'message':'No game found'})
+            }
+            else {
+                if(data.rows[0].accesstoken === req.body.accessToken) {
+    
+                const allwords = await pool.query
+                ('SELECT * FROM systemgameallwords WHERE gameid=$1'
+                ,[req.body.gameid]);
+            
+                const corrwords = await pool.query
+                ('SELECT * FROM systemgamecorrectwords WHERE gameid=$1'
+                ,[req.body.gameid]);
+            
+                const incorrwords = await pool.query
+                ('SELECT * FROM systemgameincorrectwords WHERE gameid=$1'
+                ,[req.body.gameid]);
+
+                var shareCode = generateUserName(  game.rows[0].gamename.toLowerCase().replaceAll(" ","") , 4);
+               
+            const newGame = await pool.query('INSERT INTO systemgames VALUES(default, default,$8,$1,$2,null,null, $3, $4,$5,$7, $6, null); '
+            , [game.rows[0].gamename,game.rows[0].gametype,game.rows[0].searchtype, allwords.rows.length, shareCode, game.rows[0].limitedwords, game.rows[0].gamelanguage, req.body.userId])
+                var neededAllwords=[];
+                var neededCorrwords=[];
+                var neededIncorrwords=[];
+                for(var i=0; i<allwords.length; i++) {
+                    await pool.query('INSERT INTO systemgameallwords VALUES(default, $1, $2);', [newGame.gameId,allwords.rows[i].words ]);
+            
+                }
+                for(var i=0; i<corrwords.length; i++) {
+                    await pool.query('INSERT INTO systemgamecorrectwords VALUES(default, $1, $2);', [newGame.gameId,corrwords.rows[i].words ]);
+                }
+                for(var i=0; i<incorrwords.length; i++) {
+                    await pool.query('INSERT INTO systemgameincorrectwords VALUES(default, $1, $2);', [newGame.gameId,incorrwords.rows[i].words ]);
+                }
+            
+                const allgames = await pool.query('SELECT * FROM systemgames;');
+                res.send({'message':'game duplicated!', 'allGames':allgames.rows});
+    
+            }
+            else {
+                res.status(403).send({'message':'Invalid accessToken'})
+            }
+            }
+        }
+    }
+    catch (err)
+    {
+        res.status(400).send({'message':err.message});
+    }
+})
+
 app.post('/getGameByCode', async (req, res) => {
 
     try{
@@ -1078,8 +1152,48 @@ app.post('/getGameByCode', async (req, res) => {
             const incorrwords = await pool.query
             ('SELECT * FROM systemgameincorrectwords WHERE gameid=$1'
             ,[gameid]);
+
+
+            var limited_words =[];
+
+            var allFinalWords=[];
+
+            for(let i=0; i<allwords.rows.length; i++) {
+                allFinalWords.push( allwords.rows[i].words)
+            }
+            if(game.rows[0]?.limitedwords !==null) {
+                var num;
+                if(allFinalWords.length< game.rows[0]?.limitedwords) {
+                    num =allFinalWords.length;
+                }
+                else{
+                    num =  game.rows[0]?.limitedwords;
+                }
+            for(let i=0; i<num; i++) {
+                limited_words.push(randomLimited(limited_words, allFinalWords));
         
-            res.send({'gameDetails':game.rows[0],"allWords":allwords.rows, "correctWords":corrwords.rows, "incorrectWords":incorrwords.rows});
+            }
+        }
+        else {
+            limited_words = allwords;
+        }
+        
+
+            var crossword;
+      
+            if(game.rows[0]?.gamelanguage === 'es') {
+            crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+        }
+        else {
+            crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+        }
+
+        const finalWords= jcc.upperCaseAll(crossword);
+
+       
+        
+            res.send({'gameDetails':game.rows[0],"allWords":allwords.rows, "correctWords":corrwords.rows, "incorrectWords":incorrwords.rows
+        , 'limitedWords':limited_words, "crossword_grid":crossword});
 
         }
     }
