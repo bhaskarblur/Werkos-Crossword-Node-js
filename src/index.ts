@@ -11,6 +11,7 @@ import { randomLimited, englishAlphabets, spanishAlphabets } from './helper';
 import _, { map } from 'underscore';
 import { getUserName, setUserName } from './database';
 import { generateAccessToken, generateUserName } from "./helper";
+import { initializeGrid, populateGrid} from './newCrosswordAlgo'
 const Pool = require('pg').Pool
 const pool = new Pool({
   user: 'postgres',
@@ -58,6 +59,7 @@ app.get('/spanish_alphabets', (req, res) => {
     res.send(spanishAlphabets);
   });
 
+
 app.post('/topicwise_crossword', async (req, res) => {
     try {
    
@@ -67,8 +69,8 @@ app.post('/topicwise_crossword', async (req, res) => {
 
     var data:any = null;
         data = await pool.query
-        ('SELECT * FROM systemgames WHERE topic=$1 AND category=$2 AND gamelanguage=$3;',[topic, category,
-        req.body.language]);
+        ('SELECT * FROM systemgames WHERE topic=$1 AND category=$2 AND searchtype=$4 AND gamelanguage=$3;',[topic, category,
+        req.body.language, type]);
   
         const row= data.rows[Math.floor(Math.random() * (data.rows.length))];
         const allwords = await pool.query
@@ -125,10 +127,16 @@ app.post('/topicwise_crossword', async (req, res) => {
 
         var crossword;
         if(req.body.language === 'es') {
-        crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+        const grid = initializeGrid(14, 11);
+            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            crossword = grid
     }
     else {
-        crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+        const grid = initializeGrid(14, 11);
+            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            crossword = grid
     }
 
     const finalWords= jcc.upperCaseAll(crossword);
@@ -157,6 +165,7 @@ catch (err)
 }
   });
 
+
   app.post('/generateany_crossword', async (req, res) => {
 
     try {
@@ -178,18 +187,31 @@ catch (err)
         }
 
         if(req.body.language === 'es') {
-            crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            const grid = initializeGrid(14, 11);
+            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            crossword = grid
         }
         else {
-            crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            const grid = initializeGrid(14, 11);
+            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            crossword = grid
         }
     }
     else {
         if(req.body.language === 'es') {
-            crossword = generateCrossword(allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+
+            const grid = initializeGrid(14, 11);
+            populateGrid(grid, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            crossword = grid
         }
         else {
-            crossword = generateCrossword(allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            const grid = initializeGrid(14, 11);
+            populateGrid(grid, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            crossword = grid
         }
     }
 
@@ -286,10 +308,16 @@ catch (err)
 
             var crossword;
             if(singleGame?.gamelanguage === 'es') {
-            crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            const grid = initializeGrid(14, 11);
+            populateGrid(grid, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            crossword = grid
         }
         else {
-            crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            const grid = initializeGrid(14, 11);
+            populateGrid(grid, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            crossword = grid
         }
 
         const finalWords= jcc.upperCaseAll(crossword);
@@ -333,7 +361,7 @@ catch (err)
         if(token.rows[0].accesstoken === req.body.accessToken) {
 
             const allGames = await pool.query
-            ('select * from systemgames where gametype=$1 AND gamelanguage=$2;',['system',req.body.language] );
+            ('select * from systemgames where gametype=$1 AND searchtype=$3 AND gamelanguage=$2;',['system',req.body.language, 'search'] );
             const singleGame = allGames.rows[Math.floor(Math.random() * (allGames.rows.length))];
             const gameId= singleGame?.gameid;
             console.log(gameId);
@@ -377,10 +405,17 @@ catch (err)
 
             var crossword;
             if(singleGame?.gamelanguage === 'es') {
-            crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+                const grid = initializeGrid(14, 11);
+                populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+                // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+                crossword = grid
         }
         else {
-            crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+
+            const grid = initializeGrid(14, 11);
+            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            crossword = grid
         }
 
         const finalWords= jcc.upperCaseAll(crossword);
@@ -441,8 +476,8 @@ app.get('/getUserName', async (req, res) => {
                 const subsStatus =   await pool.query('INSERT INTO subcriptionstatus VALUES(default, $1, $2, null, null);', 
                 [id.rows[0].id, 'none']);
                
-            res.send({'message':'user created successfully!', "userId": id.rows[0].id,
-            "userName":userName, "accessToken":token, "gamesLeft":50, 'subcriptionStatus':"none"});
+            res.send({'message':'user created successfully!', "id": id.rows[0].id,
+            "username":userName, "accesstoken":token, "gamesleft":50, 'subscriptionstatus':"none"});
            
           }
 
@@ -494,8 +529,8 @@ app.post('/changeUserName', async (req, res) => {
             
             else {
                
-            res.send({'message':'userName updated successfully!', "userId": userId,
-            "userName":userName});
+            res.send({'message':'userName updated successfully!', "id": userId,
+            "username":userName});
             }
           }
         }
@@ -532,8 +567,9 @@ app.post('/getUserInfo', async (req, res) => {
                     const startDate = checksubs.rows[0].startdate;
                     const endDate = checksubs.rows[0].enddate;
         
-                    console.log(startDate.toDateString(), endDate.toDateString());
-                    if(startDate.toDateString() < endDate.toDateString()) {
+        //            console.log(startDate.toDateString(), endDate.toDateString());
+                    console.log(startDate, endDate);
+                    if(startDate < endDate) {
                     
                         console.log('Subscription running');
                     }
@@ -559,7 +595,7 @@ app.post('/getUserInfo', async (req, res) => {
          console.log(gamestime);
                      
             if(gamestime !==null) {
-             console.log(gamestime < today);
+         //    console.log(gamestime < today);
 
                 if(gamestime < today) {
                     //gamesLeft reset
@@ -705,13 +741,28 @@ catch (err)
 }
 });
 
+
 app.post('/getcatstopics', async function (req, res) {
 
     try{
     var data;
-    data = await pool.query('SELECT * FROM catstopics;');
+    data = await pool.query('Select * from categories where gamelanguage=$1;',[req.body.language]);
     const rows= data.rows;
-    res.status(200).send({'message':'All categories & topics!', 'categoriesTopics':rows});
+    var list=[];
+    var topicsList=[];
+
+    for(var i=0; i<rows.length;i++) {
+        
+        const topics =  await pool.query('SELECT * FROM topics where categoryname=$1;',[rows[i].categoryname]);
+        topics.rows.forEach(element => {
+            topicsList.push(element);
+        });
+     
+        list.push({"categoryName":rows[i].categoryname, "topicsList": topicsList});
+        topicsList = [];
+    }
+   
+    res.status(200).send({'message':'All categories & topics!', 'categoriesTopics':list});
 }
 catch (err)
 {
@@ -752,7 +803,7 @@ app.post('/createGame', async function (req, res) {
 
         if(data.rows[0].accesstoken === req.body.accessToken) {
 
-            const final= await pool.query('INSERT INTO systemgames VALUES(default, default,$8,$1,$2,null,null, $3, $4,$5,$7, $6, null); '
+            const final= await pool.query('INSERT INTO systemgames (userid,gamename,gametype,topic,category,searchtype,totalwords,sharecode,gamelanguage,limitedwords,avgratings) VALUES($8,$1,$2,null,null, $3, $4,$5,$7, $6, null); '
             , [gameName,gameType,searchType, totalWords, shareCode, limitedWords, language, userId])
 
             if(final.rowCount !=1) {
@@ -765,7 +816,7 @@ app.post('/createGame', async function (req, res) {
 
                 for(let i=0;i<allWords.length;i++) {
                     const word= allWords[i];
-                    const addWord = await pool.query('INSERT INTO systemgameallwords VALUES(default, $1, $2)', [data.rows[0].gameid, word]);
+                    const addWord = await pool.query('INSERT INTO systemgameallwords(gameid,words) VALUES($1, $2)', [data.rows[0].gameid, word]);
 
                     if(addWord.rowCount !=1) {
                         res.status(400).send({'message':'There was an error2!'})
@@ -777,7 +828,7 @@ app.post('/createGame', async function (req, res) {
                 if(req.body.correctWords !==undefined) {
                 for(let j=0;j<correctWords.length;j++) {
                     const word= correctWords[j];
-                    const addWord = await pool.query('INSERT INTO systemgamecorrectwords VALUES(default, $1, $2)', [data.rows[0].gameid, word]);
+                    const addWord = await pool.query('INSERT INTO systemgamecorrectwords(gameid,words) VALUES($1, $2)', [data.rows[0].gameid, word]);
 
                     if(addWord.rowCount !=1) {
                         res.status(400).send({'message':'There was an error3!'})
@@ -788,7 +839,7 @@ app.post('/createGame', async function (req, res) {
 
                 for(let k=0;k<incorrectWords.length;k++) {
                     const word= incorrectWords[k];
-                    const addWord = await pool.query('INSERT INTO systemgameincorrectwords VALUES(default, $1, $2)', [data.rows[0].gameid, word]);
+                    const addWord = await pool.query('INSERT INTO systemgameincorrectwords(gameid,words) VALUES($1, $2)', [data.rows[0].gameid, word]);
 
                     if(addWord.rowCount !=1) {
                         res.status(400).send({'message':'There was an error4!'})
@@ -863,7 +914,7 @@ app.post('/editGame', async function (req, res) {
 
                 for(let i=0;i<allWords.length;i++) {
                     const word= allWords[i];
-                    const addWord = await pool.query('INSERT INTO systemgameallwords VALUES(default, $1, $2)', [gameId, word]);
+                    const addWord = await pool.query('INSERT INTO systemgameallwords(gameid,words) VALUES($1, $2)', [gameId, word]);
 
                     if(addWord.rowCount !=1) {
                         res.status(400).send({'message':'There was an error2!'})
@@ -874,7 +925,7 @@ app.post('/editGame', async function (req, res) {
 
                 for(let j=0;j<correctWords.length;j++) {
                     const word= correctWords[j];
-                    const addWord = await pool.query('INSERT INTO systemgamecorrectwords VALUES(default, $1, $2);', [gameId, word]);
+                    const addWord = await pool.query('INSERT INTO systemgamecorrectwords(gameid,words) VALUES($1, $2);', [gameId, word]);
 
                     if(addWord.rowCount !=1) {
                         res.status(400).send({'message':'There was an error3!'})
@@ -885,7 +936,7 @@ app.post('/editGame', async function (req, res) {
 
                 for(let k=0;k<incorrectWords.length;k++) {
                     const word= incorrectWords[k];
-                    const addWord = await pool.query('INSERT INTO systemgameincorrectwords VALUES(default, $1, $2);', [gameId, word]);
+                    const addWord = await pool.query('INSERT INTO systemgameincorrectwords(gameid,words) VALUES($1, $2);', [gameId, word]);
 
                     if(addWord.rowCount !=1) {
                         res.status(400).send({'message':'There was an error4!'})
@@ -1092,20 +1143,21 @@ app.post('/duplicateGame', async (req, res) => {
 
                 var shareCode = generateUserName(  game.rows[0].gamename.toLowerCase().replaceAll(" ","") , 4);
                
-            const newGame = await pool.query('INSERT INTO systemgames VALUES(default, default,$8,$1,$2,null,null, $3, $4,$5,$7, $6, null); '
-            , [game.rows[0].gamename,game.rows[0].gametype,game.rows[0].searchtype, allwords.rows.length, shareCode, game.rows[0].limitedwords, game.rows[0].gamelanguage, req.body.userId])
+            const newGame = await pool.query('INSERT INTO systemgames (userid,gamename,gametype,topic,category,searchtype,totalwords,sharecode,gamelanguage,limitedwords,avgratings) VALUES($8,$1,$2,null,null, $3, $4,$5,$7, $6, null); '
+            , [game.rows[0].gamename,game.rows[0].gametype,game.rows[0].searchtype, 
+            allwords.rows.length, shareCode, game.rows[0].limitedwords, game.rows[0].gamelanguage, req.body.userId])
                 var neededAllwords=[];
                 var neededCorrwords=[];
                 var neededIncorrwords=[];
                 for(var i=0; i<allwords.length; i++) {
-                    await pool.query('INSERT INTO systemgameallwords VALUES(default, $1, $2);', [newGame.gameId,allwords.rows[i].words ]);
+                    await pool.query('INSERT INTO systemgameallwords(gameid,words) VALUES($1, $2);', [newGame.gameId,allwords.rows[i].words ]);
             
                 }
                 for(var i=0; i<corrwords.length; i++) {
-                    await pool.query('INSERT INTO systemgamecorrectwords VALUES(default, $1, $2);', [newGame.gameId,corrwords.rows[i].words ]);
+                    await pool.query('INSERT INTO systemgamecorrectwords(gameid,words) VALUES($1, $2);', [newGame.gameId,corrwords.rows[i].words ]);
                 }
                 for(var i=0; i<incorrwords.length; i++) {
-                    await pool.query('INSERT INTO systemgameincorrectwords VALUES(default, $1, $2);', [newGame.gameId,incorrwords.rows[i].words ]);
+                    await pool.query('INSERT INTO systemgameincorrectwords(gameid,words) VALUES($1, $2);', [newGame.gameId,incorrwords.rows[i].words ]);
                 }
             
                 const allgames = await pool.query('SELECT * FROM systemgames;');
@@ -1182,10 +1234,16 @@ app.post('/getGameByCode', async (req, res) => {
             var crossword;
       
             if(game.rows[0]?.gamelanguage === 'es') {
-            crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+                const grid = initializeGrid(14, 11);
+                populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+                // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+                crossword = grid
         }
         else {
-            crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            const grid = initializeGrid(14, 11);
+            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            crossword = grid
         }
 
         const finalWords= jcc.upperCaseAll(crossword);
