@@ -5,13 +5,13 @@ import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
-import { countryCrossword, topicList, beachCrossword } from './crosswordData';
 import { generateCrossword } from './CrosswordAlgo2';
 import { randomLimited, englishAlphabets, spanishAlphabets } from './helper';
 import _, { map } from 'underscore';
 import { getUserName, setUserName } from './database';
 import { generateAccessToken, generateUserName } from "./helper";
 import { initializeGrid, populateGrid} from './newCrosswordAlgo'
+import { findWordPositions } from './findWordAlgo';
 const Pool = require('pg').Pool
 const pool = new Pool({
   user: 'postgres',
@@ -305,17 +305,16 @@ catch (err)
             limited_words = allWords;
         }
         
-
             var crossword;
             if(singleGame?.gamelanguage === 'es') {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
         else {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
@@ -407,15 +406,14 @@ catch (err)
             if(singleGame?.gamelanguage === 'es') {
                 const grid = initializeGrid(14, 11);
                 populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
-                // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
                 crossword = grid
         }
         else {
-
             const grid = initializeGrid(14, 11);
             populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
-            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
-            crossword = grid
+            crossword = grid;
+         
+   
         }
 
         const finalWords= jcc.upperCaseAll(crossword);
@@ -446,6 +444,47 @@ catch (err)
 }
   });
 
+
+  app.post('/gamewords_resultposition', async (req, res) => {
+
+    try{
+    const token = await pool.query('select * from usertable where id=$1', [req.body.userId]);
+
+    if(token.rows.length <1) {
+        res.send({"message": "Invalid userId"});
+    }
+    else {
+        if(token.rows[0].accesstoken === req.body.accessToken) {
+            const words:[] = JSON.parse(req.body.words);
+            const grid:[] =  JSON.parse(req.body.grid);
+            var wordsFound=[];
+            var wordsNotFound=[]
+            words.forEach(word=>{
+                if(findWordPositions(grid, word)=== "Cannot find the word")
+                {
+                    wordsNotFound.push(word)
+                }
+                else {
+                    var res = {};
+                    wordsFound.push(findWordPositions(grid, word));
+                }
+               
+            });
+
+            res.status(200).send({"message":"Results words position!", "wordsFound":wordsFound, 
+            "wordsNotFound":wordsNotFound})
+
+        }
+        else {
+            res.send({"message": "Invalid accessToken"});
+        }
+    }
+}
+        catch (err)
+        {
+            res.status(400).send({'message':err.message});
+        }
+          });
 
 app.get('/getUserName', async (req, res) => {
     
@@ -480,9 +519,6 @@ app.get('/getUserName', async (req, res) => {
             "username":userName, "accesstoken":token, "gamesleft":50, 'subscriptionstatus':"none"});
            
           }
-
-  
-
 
     }
          });
