@@ -1,5 +1,5 @@
 export function findWordPositions(grid, word) {
-    const positions = {};
+    var positions = [];
 
     // Flatten the 2D grid into a single list
     const flatGrid = grid.flat();
@@ -44,12 +44,13 @@ export function findWordPositions(grid, word) {
             const wordPositions = checkWord(index, direction);
 
             if (wordPositions.length === word.length) {
-                positions[word] = wordPositions;
+                // positions[word] = wordPositions;
+                positions = wordPositions;
             }
         }
     }
 
-    if (!positions[word] || positions[word].length !== word.length) {
+    if (!positions || positions.length !== word.length) {
         return "Cannot find the word";
     }
 
