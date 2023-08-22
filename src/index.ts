@@ -106,24 +106,12 @@ app.post('/topicwise_crossword', async (req, res) => {
     response['allWords'] = allwords.rows;
  
 
-        var limited_words =[];
-        if(row.limitedwords !==null) {
-            var num;
-            if(allWords.length< row.limitedwords) {
-                num =allWords.length;
-            }
-            else{
-                num =  row.limitedwords;
-            }
-        for(let i=0; i<num; i++) {
-            limited_words.push(randomLimited(limited_words, allWords));
-           
-        }
+    var limited_words =[];
+    if(allWords.length > 0) {
+    for(let i=0; i<req.body.words_limit; i++) {
+        limited_words.push(randomLimited(limited_words, allWords));
     }
-    else {
-        limited_words = allWords;
-    }
-    
+}   
 
         var crossword;
         if(req.body.language === 'es') {
@@ -247,7 +235,9 @@ catch (err)
                  ['public', 'challenge', req.body.language] );
             }
             else {
-                 allGames = await pool.query('select * from systemgames where gametype=$1;',['public'] );
+                 allGames = await pool.query
+                 ('select * from systemgames where gametype=$1 AND searchtype=$2 AND gamelanguage=$3;',['public'
+                , 'search', req.body.language] );
             }
            
             const singleGame = allGames.rows[Math.floor(Math.random() * (allGames.rows.length))];
@@ -360,7 +350,7 @@ catch (err)
         if(token.rows[0].accesstoken === req.body.accessToken) {
 
             const allGames = await pool.query
-            ('select * from systemgames where gametype=$1 AND searchtype=$3 AND gamelanguage=$2;',['system',req.body.language, 'search'] );
+            ('select * from systemgames where gametype=$1 AND searchtype=$3 AND gamelanguage=$2;',['system',req.body?.language, 'search'] );
             const singleGame = allGames.rows[Math.floor(Math.random() * (allGames.rows.length))];
             const gameId= singleGame?.gameid;
             console.log(gameId);
