@@ -16,7 +16,8 @@ export function randomLimited(limited_List:any[], words:any[]) {
        return wordReturn = randomLimited(limited_List, words)
     }
    // console.log(wordReturn)
-  return wordReturn;
+  return String(wordReturn).trim().replaceAll(' ','').replaceAll('.', '').replaceAll('-','').
+  replaceAll('!','').replaceAll('_', '').replaceAll('@', '').replaceAll(',','').replaceAll('/','')
   }
 
 export function generateAccessToken (userName: string) {
@@ -40,3 +41,51 @@ export function generateUserName(username:string, length) {
    }
    return username+result;
 }
+
+export function cleanWord(word) {
+   const replacements = {
+     'eÈÉÊËèéêë': 'E',
+     'aÀÁÂÃÄÅàáâãäå': 'A',
+     'b': 'B',
+     'cÇç': 'C',
+     'd': 'D',
+     'f': 'F',
+     'g': 'G',
+     'h': 'H',
+     'iÌÍÎÏìíîï': 'I',
+     'j': 'J',
+     'k': 'K',
+     'l': 'L',
+     'm': 'M',
+     'n': 'N',
+     'oÒÓÔÕÖØòóôõöø': 'O',
+     'p': 'P',
+     'q': 'Q',
+     'r': 'R',
+     'sŠš': 'S',
+     't': 'T',
+     'uÙÚÛÜùúûü': 'U',
+     'v': 'V',
+     'w': 'W',
+     'x': 'X',
+     'yŸÿ': 'Y',
+     'zŽž': 'Z',
+     'œ': 'Œ',
+     'æ': 'Æ',
+     'ð': 'Ð',
+     'ñ': 'Ñ',
+     'ý': 'Ý',
+     'þ': 'Þ'
+   };
+ 
+   for (const k in replacements) {
+     const chars = k.split('');
+     for (const char of chars) {
+       word = word.split(char).join(replacements[k]);
+     }
+   }
+ 
+   // Remove spaces, dashes, periods, commas, and single quotes, and convert to uppercase
+   return word.trim().replaceAll('.', '').replaceAll('-','').
+   replaceAll('!','').replaceAll('_', '').replaceAll('@', '').replaceAll(',','').replaceAll('/','');
+ }

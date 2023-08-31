@@ -6,7 +6,7 @@ import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import { generateCrossword } from './CrosswordAlgo2';
-import { randomLimited, englishAlphabets, spanishAlphabets } from './helper';
+import { randomLimited, englishAlphabets, spanishAlphabets, cleanWord } from './helper';
 import _, { map } from 'underscore';
 import { getUserName, setUserName } from './database';
 import { generateAccessToken, generateUserName } from "./helper";
@@ -90,15 +90,15 @@ app.post('/topicwise_crossword', async (req, res) => {
         var incorrectWords=[];
 
         for(let i=0; i<allwords.rows.length; i++) {
-            allWords.push(allwords.rows[i].words);
+            allWords.push(cleanWord(allwords.rows[i].words));
         }
 
         for(let i=0; i<corrwords.rows.length; i++) {
-            correctWords.push(corrwords.rows[i].words);
+            correctWords.push(cleanWord(String(corrwords.rows[i].words)));
         }
         
         for(let i=0; i<incorrwords.rows.length; i++) {
-            incorrectWords.push(incorrwords.rows[i].words);
+            incorrectWords.push(cleanWord(incorrwords.rows[i].words));
         }
 
         const response ={};
@@ -261,15 +261,15 @@ catch (err)
             var incorrectWords=[];
 
             for(let i=0; i<allwords.rows.length; i++) {
-                allWords.push(allwords.rows[i].words);
+                allWords.push(cleanWord(String(allwords.rows[i].words)));
             }
 
             for(let i=0; i<corrwords.rows.length; i++) {
-                correctWords.push(corrwords.rows[i].words);
+                correctWords.push(cleanWord(String(corrwords.rows[i].words)));
             }
             
             for(let i=0; i<incorrwords.rows.length; i++) {
-                incorrectWords.push(incorrwords.rows[i].words);
+                incorrectWords.push(cleanWord(String(incorrwords.rows[i].words)));
             }
 
             const response ={};
@@ -372,15 +372,15 @@ catch (err)
             const incorrectWords=[];
 
             for(let i=0; i<allwords.rows.length; i++) {
-                allWords.push(allwords.rows[i].words);
+                allWords.push(cleanWord(String(allwords.rows[i].words)));
             }
 
             for(let i=0; i<corrwords.rows.length; i++) {
-                correctWords.push(corrwords.rows[i].words);
+                correctWords.push(cleanWord(String(corrwords.rows[i].words)));
             }
             
             for(let i=0; i<incorrwords.rows.length; i++) {
-                incorrectWords.push(incorrwords.rows[i].words);
+                incorrectWords.push(cleanWord(String(incorrwords.rows[i].words)));
             }
 
             console.log(allwords.rows.length);
@@ -548,12 +548,13 @@ app.post('/changeUserName', async (req, res) => {
         else {
             const data= await pool.query('UPDATE usertable set username=$1 where id=$2', [userName, userId]);
 
+          
             if(data.rowCount!=1) {
                 res.send({"message": "There was an error, check the user id and username!"});
             }
             
             else {
-               
+                await pool.query('UPDATE gameleaderboards set playername=$1 where userid=$2;',[userName, userId]);
             res.send({'message':'userName updated successfully!', "id": userId,
             "username":userName});
             }
@@ -731,7 +732,7 @@ app.post('/getLeaderboards', async(req, res) => {
         if(data.rows[0].accesstoken === req.body.accessToken) {
 
             const data_= await pool.query
-            ('SELECT * FROM gameleaderboards WHERE gameid= $1 ORDER BY timescore ASC, crosswordscore DESC Limit 10;', [req.body.gameId]);
+            ('SELECT * FROM gameleaderboards WHERE gameid= $1 ORDER BY crosswordscore DESC, timescore ASC Limit 10;', [req.body.gameId]);
             
           
         
@@ -1174,6 +1175,7 @@ app.post('/duplicateGame', async (req, res) => {
                 var neededAllwords=[];
                 var neededCorrwords=[];
                 var neededIncorrwords=[];
+                
                 for(var i=0; i<allwords.length; i++) {
                     await pool.query('INSERT INTO systemgameallwords(gameid,words) VALUES($1, $2);', [newGame.gameId,allwords.rows[i].words ]);
             
@@ -1230,6 +1232,22 @@ app.post('/getGameByCode', async (req, res) => {
             ('SELECT * FROM systemgameincorrectwords WHERE gameid=$1'
             ,[gameid]);
 
+            var allWords=[];
+            var correctWords=[];
+            var incorrectWords=[];
+    
+            for(let i=0; i<allwords.rows.length; i++) {
+                allWords.push(cleanWord(allwords.rows[i].words));
+            }
+    
+            for(let i=0; i<corrwords.rows.length; i++) {
+                correctWords.push(cleanWord(String(corrwords.rows[i].words)));
+            }
+            
+            for(let i=0; i<incorrwords.rows.length; i++) {
+                incorrectWords.push(cleanWord(incorrwords.rows[i].words));
+            }
+    
 
             var limited_words =[];
 
@@ -1275,7 +1293,7 @@ app.post('/getGameByCode', async (req, res) => {
 
        
         
-            res.send({'gameDetails':game.rows[0],"allWords":allwords.rows, "correctWords":corrwords.rows, "incorrectWords":incorrwords.rows
+            res.send({'gameDetails':game.rows[0],"allWords":allWords, "correctWords":correctWords, "incorrectWords":incorrectWords
         , 'limitedWords':limited_words, "crossword_grid":crossword});
 
         }
