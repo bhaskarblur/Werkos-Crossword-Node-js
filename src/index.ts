@@ -6,7 +6,7 @@ import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import { generateCrossword } from './CrosswordAlgo2';
-import { randomLimited, englishAlphabets, spanishAlphabets, cleanWord } from './helper';
+import { randomLimited, englishAlphabets, spanishAlphabets, cleanWord, randomLimitedWithFilter } from './helper';
 import _, { map } from 'underscore';
 import { getUserName, setUserName } from './database';
 import { generateAccessToken, generateUserName } from "./helper";
@@ -47,6 +47,10 @@ server.listen(PORT, () => {
 
 app.get('/', (req, res) => {
     res.send('Crossword app for mobile. Download now.');
+  });
+
+  app.get('/hello', (req, res) => {
+    res.send({"message":"Server is active!"});
   });
 
 
@@ -90,7 +94,7 @@ app.post('/topicwise_crossword', async (req, res) => {
         var incorrectWords=[];
 
         for(let i=0; i<allwords.rows.length; i++) {
-            allWords.push(cleanWord(allwords.rows[i].words));
+            allWords.push(allwords.rows[i].words);
         }
 
         for(let i=0; i<corrwords.rows.length; i++) {
@@ -104,25 +108,27 @@ app.post('/topicwise_crossword', async (req, res) => {
         const response ={};
     response['gameDetails'] = row;
     response['allWords'] = allwords.rows;
- 
 
+    var filtered_words = []
     var limited_words =[];
     if(allWords.length > 0) {
     for(let i=0; i<req.body.words_limit; i++) {
         limited_words.push(randomLimited(limited_words, allWords));
+    
     }
+    filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
 }   
 
         var crossword;
         if(req.body.language === 'es') {
         const grid = initializeGrid(14, 11);
-            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
     }
     else {
         const grid = initializeGrid(14, 11);
-            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
     }
@@ -131,6 +137,7 @@ app.post('/topicwise_crossword', async (req, res) => {
 
    
     response['limitedWords'] = limited_words;
+    response['filteredWords'] = filtered_words;
 
     if(req.body.type !== null) {
     if(req.body.type === 'challenge') {
@@ -261,7 +268,7 @@ catch (err)
             var incorrectWords=[];
 
             for(let i=0; i<allwords.rows.length; i++) {
-                allWords.push(cleanWord(String(allwords.rows[i].words)));
+                allWords.push(String(allwords.rows[i].words));
             }
 
             for(let i=0; i<corrwords.rows.length; i++) {
@@ -277,6 +284,8 @@ catch (err)
         response['allWords'] = allwords.rows;
      
 
+        var filtered_words = []
+        var limited_words =[];
             var limited_words =[];
             if(singleGame?.limitedwords !==null) {
                 var num;
@@ -288,23 +297,25 @@ catch (err)
                 }
             for(let i=0; i<num; i++) {
                 limited_words.push(randomLimited(limited_words, allWords));
-               
+                
             }
+            filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
         }
         else {
             limited_words = allWords;
+            filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
         }
         
             var crossword;
             if(singleGame?.gamelanguage === 'es') {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
         else {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
@@ -313,7 +324,7 @@ catch (err)
 
        
         response['limitedWords'] = limited_words;
-
+        response['filteredWords'] = filtered_words;
      
         if(req.body.type === 'challenge'){
         response['correctWords'] = correctWords;
@@ -353,7 +364,7 @@ catch (err)
             ('select * from systemgames where gametype=$1 AND searchtype=$3 AND gamelanguage=$2;',['system',req.body?.language, 'search'] );
             const singleGame = allGames.rows[Math.floor(Math.random() * (allGames.rows.length))];
             const gameId= singleGame?.gameid;
-            console.log(gameId);
+           // console.log(gameId);
 
             const allwords = await pool.query
             ('SELECT * FROM systemgameallwords WHERE gameid=$1'
@@ -372,7 +383,7 @@ catch (err)
             const incorrectWords=[];
 
             for(let i=0; i<allwords.rows.length; i++) {
-                allWords.push(cleanWord(String(allwords.rows[i].words)));
+                allWords.push(String(allwords.rows[i].words));
             }
 
             for(let i=0; i<corrwords.rows.length; i++) {
@@ -386,21 +397,23 @@ catch (err)
             console.log(allwords.rows.length);
 
             var limited_words =[];
+            var filtered_words =[];
             if(allWords.length > 0) {
             for(let i=0; i<req.body.words_limit; i++) {
                 limited_words.push(randomLimited(limited_words, allWords));
             }
+            filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
         }            
 
             var crossword;
             if(singleGame?.gamelanguage === 'es') {
                 const grid = initializeGrid(14, 11);
-                populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+                populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
                 crossword = grid
         }
         else {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid;
          
    
@@ -412,6 +425,8 @@ catch (err)
         response['gameDetails'] = singleGame;
         response['allWords'] = allwords.rows;
         response['limitedWords'] = limited_words;
+        response['filteredWords'] = filtered_words;
+
 
         if(singleGame?.searchtype === 'challenge'){
         response['correctWords'] = correctWords;
@@ -771,6 +786,7 @@ catch (err)
 app.post('/getcatstopics', async function (req, res) {
 
     try{
+        console.log('All cats topics!');
     var data;
     data = await pool.query('Select * from categories where gamelanguage=$1;',[req.body.language]);
     const rows= data.rows;
@@ -1237,7 +1253,7 @@ app.post('/getGameByCode', async (req, res) => {
             var incorrectWords=[];
     
             for(let i=0; i<allwords.rows.length; i++) {
-                allWords.push(cleanWord(allwords.rows[i].words));
+                allWords.push(allwords.rows[i].words);
             }
     
             for(let i=0; i<corrwords.rows.length; i++) {
@@ -1250,6 +1266,7 @@ app.post('/getGameByCode', async (req, res) => {
     
 
             var limited_words =[];
+            var filtered_words = []
 
             var allFinalWords=[];
 
@@ -1268,9 +1285,11 @@ app.post('/getGameByCode', async (req, res) => {
                 limited_words.push(randomLimited(limited_words, allFinalWords));
         
             }
+            filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
         }
         else {
             limited_words = allwords;
+            filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words))
         }
         
 
@@ -1278,13 +1297,13 @@ app.post('/getGameByCode', async (req, res) => {
       
             if(game.rows[0]?.gamelanguage === 'es') {
                 const grid = initializeGrid(14, 11);
-                populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+                populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
                 // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
                 crossword = grid
         }
         else {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
@@ -1293,8 +1312,10 @@ app.post('/getGameByCode', async (req, res) => {
 
        
         
-            res.send({'gameDetails':game.rows[0],"allWords":allWords, "correctWords":correctWords, "incorrectWords":incorrectWords
-        , 'limitedWords':limited_words, "crossword_grid":crossword});
+            res.send({'gameDetails':game.rows[0],"allWords":allWords, 
+            "correctWords":correctWords, "incorrectWords":incorrectWords, 'limitedWords':limited_words, 
+            "filteredWords":filtered_words
+        , "crossword_grid":crossword});
 
         }
     }

@@ -16,8 +16,22 @@ export function randomLimited(limited_List:any[], words:any[]) {
        return wordReturn = randomLimited(limited_List, words)
     }
    // console.log(wordReturn)
-  return String(wordReturn).trim().replaceAll(' ','').replaceAll('.', '').replaceAll('-','').
-  replaceAll('!','').replaceAll('_', '').replaceAll('@', '').replaceAll(',','').replaceAll('/','')
+  return String(wordReturn)
+  }
+
+  export function randomLimitedWithFilter(limited_List:any[], words:any[]) {
+    var listReturn = []
+    // wordReturn = words.splice(Math.floor(Math.random() * (words.length + 1)), 1)[0];
+    // if(wordReturn === undefined) {
+      //  return wordReturn = randomLimited(limited_List, words)
+    // }
+   // console.log(wordReturn)
+
+   for( var i = 0; i < words.length; i++) {
+    listReturn.push(cleanWord(words[i]));
+   }
+   console.log('wordReturn', listReturn);
+   return listReturn;
   }
 
 export function generateAccessToken (userName: string) {
@@ -89,3 +103,4 @@ export function cleanWord(word) {
    return word.trim().replaceAll('.', '').replaceAll('-','').
    replaceAll('!','').replaceAll('_', '').replaceAll('@', '').replaceAll(',','').replaceAll('/','');
  }
+
