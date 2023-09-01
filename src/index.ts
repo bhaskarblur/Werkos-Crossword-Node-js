@@ -122,13 +122,13 @@ app.post('/topicwise_crossword', async (req, res) => {
         var crossword;
         if(req.body.language === 'es') {
         const grid = initializeGrid(14, 11);
-            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
     }
     else {
         const grid = initializeGrid(14, 11);
-            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
     }
@@ -309,13 +309,13 @@ catch (err)
             var crossword;
             if(singleGame?.gamelanguage === 'es') {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
         else {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
@@ -408,12 +408,12 @@ catch (err)
             var crossword;
             if(singleGame?.gamelanguage === 'es') {
                 const grid = initializeGrid(14, 11);
-                populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+                populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
                 crossword = grid
         }
         else {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid;
          
    
@@ -1297,13 +1297,13 @@ app.post('/getGameByCode', async (req, res) => {
       
             if(game.rows[0]?.gamelanguage === 'es') {
                 const grid = initializeGrid(14, 11);
-                populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+                populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
                 // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
                 crossword = grid
         }
         else {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, filtered_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
