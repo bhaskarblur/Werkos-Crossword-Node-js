@@ -100,7 +100,7 @@ export function cleanWord(word) {
    }
  
    // Remove spaces, dashes, periods, commas, and single quotes, and convert to uppercase
-   return word.trim().replaceAll('.', '').replaceAll('-','').
+   return word.trim().replaceAll('.', '').replaceAll('-','').replaceAll(' ','').
    replaceAll('!','').replaceAll('_', '').replaceAll('@', '').replaceAll(',','').replaceAll('/','');
  }
 

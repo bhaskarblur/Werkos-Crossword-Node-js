@@ -102,7 +102,6 @@ export function initializeGrid(rows, cols) {
   export function populateGrid(grid, words, alphabetList) {
     const rows = grid.length;
     const cols = grid[0].length;
-    const usedCells = new Set(); // To track used cells
   
     for (const word of words) {
       let placed = false;
@@ -112,62 +111,7 @@ export function initializeGrid(rows, cols) {
         const row = Math.floor(Math.random() * rows);
         const col = Math.floor(Math.random() * cols);
   
-        // Check if all cells required by the word are unused
-        let canPlace = true;
-        if (direction === 'horizontal') {
-          for (let i = 0; i < word.length; i++) {
-            const cell = grid[row][col + i];
-            if (cell !== '' && cell !== word[i]) {
-              canPlace = false;
-              break;
-            }
-          }
-        } else if (direction === 'vertical') {
-          for (let i = 0; i < word.length; i++) {
-            const cell = grid[row + i][col];
-            if (cell !== '' && cell !== word[i]) {
-              canPlace = false;
-              break;
-            }
-          }
-        } else if (direction === 'diagonal') {
-          for (let i = 0; i < word.length; i++) {
-            const cell = grid[row + i][col + i];
-            if (cell !== '' && cell !== word[i]) {
-              canPlace = false;
-              break;
-            }
-          }
-        } else if (direction === 'diagonal_reverse') {
-          for (let i = 0; i < word.length; i++) {
-            const cell = grid[row + i][col - i];
-            if (cell !== '' && cell !== word[i]) {
-              canPlace = false;
-              break;
-            }
-          }
-        }
-  
-        if (canPlace) {
-          // Mark the cells as used
-          if (direction === 'horizontal') {
-            for (let i = 0; i < word.length; i++) {
-              usedCells.add(`${row}-${col + i}`);
-            }
-          } else if (direction === 'vertical') {
-            for (let i = 0; i < word.length; i++) {
-              usedCells.add(`${row + i}-${col}`);
-            }
-          } else if (direction === 'diagonal') {
-            for (let i = 0; i < word.length; i++) {
-              usedCells.add(`${row + i}-${col + i}`);
-            }
-          } else if (direction === 'diagonal_reverse') {
-            for (let i = 0; i < word.length; i++) {
-              usedCells.add(`${row + i}-${col - i}`);
-            }
-          }
-  
+        if (canPlaceWord(grid, word, row, col, direction)) {
           placeWord(grid, word, row, col, direction);
           placed = true;
           break;

@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
-import { generateCrossword } from './CrosswordAlgo2';
 import { randomLimited, englishAlphabets, spanishAlphabets, cleanWord, randomLimitedWithFilter } from './helper';
 import _, { map } from 'underscore';
 import { getUserName, setUserName } from './database';
@@ -788,14 +787,16 @@ app.post('/getcatstopics', async function (req, res) {
     try{
         console.log('All cats topics!');
     var data;
-    data = await pool.query('Select * from categories where gamelanguage=$1;',[req.body.language]);
+    data = await pool.query('Select * from categories where gamelanguage=$1 AND searchtype=$2;',
+    [req.body.language,req.body.searchtype]);
     const rows= data.rows;
     var list=[];
     var topicsList=[];
 
     for(var i=0; i<rows.length;i++) {
         
-        const topics =  await pool.query('SELECT * FROM topics where categoryname=$1;',[rows[i].categoryname]);
+        const topics =  await pool.query('SELECT * FROM topics where categoryname=$1 AND searchtype=$2;',
+        [rows[i].categoryname, req.body.searchtype]);
         topics.rows.forEach(element => {
             topicsList.push(element);
         });
