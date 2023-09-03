@@ -1,3 +1,5 @@
+import { cleanWord } from "./helper";
+
 export function initializeGrid(rows, cols) {
   const grid = [];
   for (let i = 0; i < rows; i++) {
@@ -99,14 +101,17 @@ function fillEmptySpaces(grid, alphabetList) {
   }
 }
 
-export function populateGrid(grid, words, alphabetList) {
-  const rows = grid.length;
-  const cols = grid[0].length;
-  const usedCells = new Set(); // To track used cells
+export function markWordsInGrid(grid, words, alphabets) {
   const markedWords = new Set(); // To track marked words
+  const filteredMarkedwords = new Set();
   const maxMarkedWords = 22; // Minimum number of marked words
 
   for (const word of words) {
+    const cleanedWord = cleanWord(word);
+    if (markedWords.size >= maxMarkedWords) {
+      break; // Stop trying to place additional words once the limit is reached
+    }
+
     let placed = false;
 
     for (let attempt = 0; attempt < 100; attempt++) {
@@ -115,79 +120,25 @@ export function populateGrid(grid, words, alphabetList) {
       // Generate random coordinates within grid bounds
       let row, col;
       if (direction === 'horizontal') {
-        row = Math.floor(Math.random() * rows);
-        col = Math.floor(Math.random() * (cols - word.length + 1));
+        row = Math.floor(Math.random() * grid.length);
+        col = Math.floor(Math.random() * (grid[0].length - word.length + 1));
       } else if (direction === 'vertical') {
-        row = Math.floor(Math.random() * (rows - word.length + 1));
-        col = Math.floor(Math.random() * cols);
+        row = Math.floor(Math.random() * (grid.length - word.length + 1));
+        col = Math.floor(Math.random() * grid[0].length);
       } else if (direction === 'diagonal_up_right') {
-        row = Math.floor(Math.random() * (rows - word.length + 1)) + (word.length - 1);
-        col = Math.floor(Math.random() * (cols - word.length + 1));
+        row = Math.floor(Math.random() * (grid.length - word.length + 1)) + (word.length - 1);
+        col = Math.floor(Math.random() * (grid[0].length - word.length + 1));
       } else if (direction === 'diagonal_down_right') {
-        row = Math.floor(Math.random() * (rows - word.length + 1));
-        col = Math.floor(Math.random() * (cols - word.length + 1));
+        row = Math.floor(Math.random() * (grid.length - word.length + 1));
+        col = Math.floor(Math.random() * (grid[0].length - word.length + 1));
       }
 
-      // Check if all cells required by the word are unused
-      let canPlace = true;
-      if (direction === 'horizontal') {
-        for (let i = 0; i < word.length; i++) {
-          const cell = grid[row][col + i];
-          if (cell !== '' && cell !== word[i]) {
-            canPlace = false;
-            break;
-          }
-        }
-      } else if (direction === 'vertical') {
-        for (let i = 0; i < word.length; i++) {
-          const cell = grid[row + i][col];
-          if (cell !== '' && cell !== word[i]) {
-            canPlace = false;
-            break;
-          }
-        }
-      } else if (direction === 'diagonal_up_right') {
-        for (let i = 0; i < word.length; i++) {
-          const cell = grid[row - i][col + i];
-          if (cell !== '' && cell !== word[i]) {
-            canPlace = false;
-            break;
-          }
-        }
-      } else if (direction === 'diagonal_down_right') {
-        for (let i = 0; i < word.length; i++) {
-          const cell = grid[row + i][col + i];
-          if (cell !== '' && cell !== word[i]) {
-            canPlace = false;
-            break;
-          }
-        }
-      }
-
-      // Check if any of the cells are already used
-      for (let i = 0; i < word.length; i++) {
-        const cellKey = `${row - (direction === 'diagonal_up_right' ? -i : 0)}-${col + i}`;
-        if (usedCells.has(cellKey)) {
-          canPlace = false;
-          break;
-        }
-      }
-
-      if (canPlace) {
-        // Mark the cells as used
-        for (let i = 0; i < word.length; i++) {
-          const cellKey = `${row - (direction === 'diagonal_up_right' ? -i : 0)}-${col + i}`;
-          usedCells.add(cellKey);
-        }
-
-        // Check if the word should be marked
-        if (markedWords.size < maxMarkedWords) {
-          markedWords.add(word);
-        }
-
-        placeWord(grid, word, row, col, direction);
+      if (canPlaceWord(grid, cleanedWord, row, col, direction)) {
+        placeWord(grid, cleanedWord, row, col, direction);
         placed = true;
-        break;
+        markedWords.add(word);
+        filteredMarkedwords.add(cleanedWord);
+        break; // Move on to the next word
       }
     }
 
@@ -197,7 +148,9 @@ export function populateGrid(grid, words, alphabetList) {
   }
 
   // Fill the remaining empty spaces with random letters
-  fillEmptySpaces(grid, alphabetList);
+  fillEmptySpaces(grid, alphabets);
+  
+  return { grid, markedWords: Array.from(markedWords), filteredMarkedwords: Array.from(filteredMarkedwords)};
 }
 
 function displayGrid(grid) {
@@ -205,3 +158,8 @@ function displayGrid(grid) {
     console.log(row.join(' '));
   }
 }
+
+// Example usage:
+// const { grid, markedWords } = markWordsInGrid(initializeGrid(14, 11), ['WORD1', 'WORD2', 'WORD3']);
+// displayGrid(grid);
+// console.log("Marked Words:", markedWords);

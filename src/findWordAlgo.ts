@@ -12,6 +12,8 @@ export function findWordPositions(grid, word) {
         { dr: 1, dc: 0 },     // Vertical
         { dr: 1, dc: 1 },     // Diagonal (top-left to bottom-right)
         { dr: 1, dc: -1 },    // Diagonal (top-right to bottom-left)
+        { dr: -1, dc: 1 },    // Diagonal (bottom-left to top-right)
+        { dr: -1, dc: -1 },   // Diagonal (bottom-right to top-left)
     ];
 
     // Helper function to check if a word starts at a position in a given direction

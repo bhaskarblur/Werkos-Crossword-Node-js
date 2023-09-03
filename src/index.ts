@@ -7,9 +7,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { randomLimited, englishAlphabets, spanishAlphabets, cleanWord, randomLimitedWithFilter } from './helper';
 import _, { map } from 'underscore';
-import { getUserName, setUserName } from './database';
 import { generateAccessToken, generateUserName } from "./helper";
 import { initializeGrid, populateGrid} from './newCrosswordAlgo'
+import { markWordsInGrid } from './systemgamesCrosswordAlgo';
 import { findWordPositions } from './findWordAlgo';
 const Pool = require('pg').Pool
 const pool = new Pool({
@@ -66,6 +66,9 @@ app.get('/spanish_alphabets', (req, res) => {
 app.post('/topicwise_crossword', async (req, res) => {
     try {
    
+    const token = await pool.query('select * from usertable where id=$1', [req.body.userId]);
+
+    if(token.rows[0].gamesleft>0) {
     var topic = req.body.topic;
     var category = req.body.category;
     var type= req.body.type;
@@ -111,25 +114,40 @@ app.post('/topicwise_crossword', async (req, res) => {
     var filtered_words = []
     var limited_words =[];
     if(allWords.length > 0) {
-    for(let i=0; i<req.body.words_limit; i++) {
-        limited_words.push(randomLimited(limited_words, allWords));
+    // for(let i=0; i<req.body.words_limit; i++) {
+        // limited_words.push(randomLimited(limited_words, allWords));
     
-    }
-    filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
+    // }
+    // filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
 }   
 
         var crossword;
-        if(req.body.language === 'es') {
-        const grid = initializeGrid(14, 11);
-            populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
-            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+        if(row?.gamelanguage === 'es') {
+            const grid_ = initializeGrid(14, 11);
+            const { grid, markedWords, filteredMarkedwords } = markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            console.log(markedWords);
+            
+            for(let i=0; i<req.body.words_limit; i++) {
+                limited_words.push(randomLimited(limited_words, markedWords));
+            }
+            filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
+            // console.log(filtered_words[0]);
+            // populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
             crossword = grid
     }
     else {
-        const grid = initializeGrid(14, 11);
-            populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
-            // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
-            crossword = grid
+        const grid_ = initializeGrid(14, 11);
+        const { grid, markedWords, filteredMarkedwords } = markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+        console.log(markedWords);
+        
+        for(let i=0; i<req.body.words_limit; i++) {
+            limited_words.push(randomLimited(limited_words, markedWords));
+        }
+        filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
+        // console.log(filtered_words[0]);
+        // populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+        crossword = grid
+
     }
 
     const finalWords= jcc.upperCaseAll(crossword);
@@ -147,11 +165,16 @@ app.post('/topicwise_crossword', async (req, res) => {
 
     }
 }
-    response['crossword_grid'] = finalWords;
 
-    res.status(200).send(response);
+response['crossword_grid'] = finalWords;
+res.status(200).send(response);
+    }
+    else {
+        res.status(401).send({'message':'Cannot play more as gamesleft is 0'})
+    }
+   
 
-         
+
 }
 catch (err)
 {
@@ -234,6 +257,7 @@ catch (err)
     }
     else {
         if(token.rows[0].accesstoken === req.body.accessToken) {
+            if(token.rows[0].gamesleft > 0) {
             var allGames ;
             if(req.body.type === "challenge") {
                  allGames = await pool.query
@@ -337,6 +361,11 @@ catch (err)
 
         res.status(200).send(response);
     }
+    else {
+        res.status(401).send({'message':'Cannot play more as gamesleft is 0'})
+    }
+
+}
 
 }
 
@@ -359,11 +388,12 @@ catch (err)
     else {
         if(token.rows[0].accesstoken === req.body.accessToken) {
 
+            if(token.rows[0].gamesleft > 0) {
             const allGames = await pool.query
             ('select * from systemgames where gametype=$1 AND searchtype=$3 AND gamelanguage=$2;',['system',req.body?.language, 'search'] );
             const singleGame = allGames.rows[Math.floor(Math.random() * (allGames.rows.length))];
             const gameId= singleGame?.gameid;
-           // console.log(gameId);
+        
 
             const allwords = await pool.query
             ('SELECT * FROM systemgameallwords WHERE gameid=$1'
@@ -398,23 +428,38 @@ catch (err)
             var limited_words =[];
             var filtered_words =[];
             if(allWords.length > 0) {
-            for(let i=0; i<req.body.words_limit; i++) {
-                limited_words.push(randomLimited(limited_words, allWords));
-            }
-            filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
+            // for(let i=0; i<req.body.words_limit; i++) {
+                // limited_words.push(randomLimited(limited_words, allWords));
+            // }
+            // filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
         }            
 
             var crossword;
             if(singleGame?.gamelanguage === 'es') {
-                const grid = initializeGrid(14, 11);
-                populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+                const grid_ = initializeGrid(14, 11);
+                const { grid, markedWords, filteredMarkedwords } = markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+                console.log(markedWords);
+                
+                for(let i=0; i<req.body.words_limit; i++) {
+                    limited_words.push(randomLimited(limited_words, markedWords));
+                }
+                filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
+                // console.log(filtered_words[0]);
+                // populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
                 crossword = grid
         }
         else {
-            const grid = initializeGrid(14, 11);
-            populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
-            crossword = grid;
-         
+            const grid_ = initializeGrid(14, 11);
+            const { grid, markedWords, filteredMarkedwords } = markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            console.log(markedWords);
+            
+            for(let i=0; i<req.body.words_limit; i++) {
+                limited_words.push(randomLimited(limited_words, markedWords));
+            }
+            filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words));
+            // console.log(filtered_words[0]);
+            // populateGrid(grid, filtered_words[0], 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            crossword = grid
    
         }
 
@@ -438,6 +483,11 @@ catch (err)
 
         res.status(200).send(response);
     }
+    else {
+        res.status(401).send({'message':'Cannot play more as gamesleft is 0'})
+    }
+}
+
 
 }
 
@@ -640,7 +690,7 @@ app.post('/getUserInfo', async (req, res) => {
                 if(gamestime < today) {
                     //gamesLeft reset
                     await pool.query
-                    ('UPDATE userTable SET gamesleft=50 , gamesendeddatetime=null WHERE id=$1', [userid]);
+                    ('UPDATE userTable SET gamesleft=50 , gamesendedatetime=null WHERE id=$1', [userid]);
 
                 }
                 else {}
@@ -690,7 +740,8 @@ app.post('/addUserGameRecord', async function (req, res) {
             if (data.rows[0].gamesleft > 0) {
                 const data_ = data.rows[0].gamesleft-1;
 
-                if(data.rows[0].subscriptionstatus === '1year' || data.rows[0].subscriptionstatus=== '1month') {
+                console.log(data.rows[0].subscriptionstatus);
+                if(data.rows[0].subscriptionstatus === '1year' || data.rows[0].subscriptionstatus === '1month') {
 
                 }
                 else {
@@ -702,8 +753,9 @@ app.post('/addUserGameRecord', async function (req, res) {
                 let dd_:any = datenow_.getDate() ;
     
              const formattedToday = yyyy_ + '/' + mm_ + '/' + dd_;
-                        await pool.query('UPDATE userTable SET gamesendeddatetime= $1 where id=$2;',[datenow_, userid])
+                        await pool.query('UPDATE userTable SET gamesendedatetime = $1 where id=$2;',[datenow_, userid])
                     }
+                    console.log(data_);
                     await pool.query('UPDATE userTable SET gamesleft=$1 where id=$2;',[data_, userid]);
                 }
               
@@ -914,7 +966,7 @@ catch (err)
 
 app.post('/editGame', async function (req, res) {
 
-    try{
+ try{
     var userId= req.body?.userId;
     var gameId:string= req.body?.gameId;
     var gameName:string= req.body?.gameName;
@@ -926,9 +978,14 @@ app.post('/editGame', async function (req, res) {
     var shareCode = generateUserName(  gameName.toLowerCase().replaceAll(" ","") , 4);
 
     var allWords:[]=    JSON.parse(req.body?.allWords);
-    var correctWords:[] = JSON.parse( req.body?.correctWords);
-    var incorrectWords:[] = JSON.parse( req.body?.incorrectWords);
 
+    var correctWords:[];
+    var incorrectWords:[];
+    console.log(req.body.correctWords);
+    if(req.body.correctWords !== undefined) {
+    correctWords= JSON.parse( req.body.correctWords);
+    incorrectWords = JSON.parse( req.body.incorrectWords);
+    }
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body?.userId]);
 
     if(data.rows.length <1) {   
@@ -949,11 +1006,13 @@ app.post('/editGame', async function (req, res) {
             }
             else {
 
-                if(allWords.length>0 && correctWords.length>0 && incorrectWords.length >0) {
+                if(allWords.length>0 ) {
                     const delete_1= await pool.query('DELETE FROM systemgameallwords WHERE gameid=$1', [gameId]);
+
+                    if(correctWords !== undefined) {
                     const delete_2= await pool.query('DELETE FROM systemgamecorrectwords WHERE gameid=$1', [gameId]);
                     const delete_3= await pool.query('DELETE FROM systemgameincorrectwords WHERE gameid=$1', [gameId]);
-
+                    }
 
                 for(let i=0;i<allWords.length;i++) {
                     const word= allWords[i];
@@ -965,6 +1024,8 @@ app.post('/editGame', async function (req, res) {
                 
 
                 }
+
+                if(correctWords !== undefined) {
 
                 for(let j=0;j<correctWords.length;j++) {
                     const word= correctWords[j];
@@ -987,6 +1048,7 @@ app.post('/editGame', async function (req, res) {
                   
 
                 }
+            }
                 }
                 else {
                     const allwords = await pool.query
@@ -1167,7 +1229,7 @@ app.post('/duplicateGame', async (req, res) => {
             const game = await pool.query('SELECT * FROM systemgames WHERE gameId =$1',[req.body.gameid]);
     
             if(game.rows.length <1) {   
-                res.status(403).send({'message':'No game found'})
+                res.status(404).send({'message':'No game found'})
             }
             else {
                 if(data.rows[0].accesstoken === req.body.accessToken) {
@@ -1176,35 +1238,40 @@ app.post('/duplicateGame', async (req, res) => {
                 ('SELECT * FROM systemgameallwords WHERE gameid=$1'
                 ,[req.body.gameid]);
             
-                const corrwords = await pool.query
+                const corrwords  = await pool.query
                 ('SELECT * FROM systemgamecorrectwords WHERE gameid=$1'
                 ,[req.body.gameid]);
             
                 const incorrwords = await pool.query
                 ('SELECT * FROM systemgameincorrectwords WHERE gameid=$1'
                 ,[req.body.gameid]);
-
-                var shareCode = generateUserName(  game.rows[0].gamename.toLowerCase().replaceAll(" ","") , 4);
+                
+            
+        
+                var shareCode = generateUserName( game.rows[0].gamename.toLowerCase().replaceAll(" ","") , 4);
                
             const newGame = await pool.query('INSERT INTO systemgames (userid,gamename,gametype,topic,category,searchtype,totalwords,sharecode,gamelanguage,limitedwords,avgratings) VALUES($8,$1,$2,null,null, $3, $4,$5,$7, $6, null); '
-            , [game.rows[0].gamename,game.rows[0].gametype,game.rows[0].searchtype, 
+            , [game.rows[0].gamename+' - copy',game.rows[0].gametype,game.rows[0].searchtype, 
             allwords.rows.length, shareCode, game.rows[0].limitedwords, game.rows[0].gamelanguage, req.body.userId])
-                var neededAllwords=[];
-                var neededCorrwords=[];
-                var neededIncorrwords=[];
                 
-                for(var i=0; i<allwords.length; i++) {
-                    await pool.query('INSERT INTO systemgameallwords(gameid,words) VALUES($1, $2);', [newGame.gameId,allwords.rows[i].words ]);
+                for(var i=0; i<allwords.rows.length; i++) {
+                    await pool.query('INSERT INTO systemgameallwords(gameid,words) VALUES($1, $2);',
+                     [newGame.gameid,allwords.rows[i].words ]);
+                
+                
+                }
+                
+                if(game.rows[0].searchtype === 'challenge') {
+
+                for(var i=0; i<corrwords.rows.length; i++) {
+                    await pool.query('INSERT INTO systemgamecorrectwords(gameid,words) VALUES($1, $2);', [newGame.gameid,corrwords.rows[i].words ]);
+                }
+                for(var i=0; i<incorrwords.rows.length; i++) {
+                    await pool.query('INSERT INTO systemgameincorrectwords(gameid,words) VALUES($1, $2);', [newGame.gameid,incorrwords.rows[i].words ]);
+                }
             
                 }
-                for(var i=0; i<corrwords.length; i++) {
-                    await pool.query('INSERT INTO systemgamecorrectwords(gameid,words) VALUES($1, $2);', [newGame.gameId,corrwords.rows[i].words ]);
-                }
-                for(var i=0; i<incorrwords.length; i++) {
-                    await pool.query('INSERT INTO systemgameincorrectwords(gameid,words) VALUES($1, $2);', [newGame.gameId,incorrwords.rows[i].words ]);
-                }
-            
-                const allgames = await pool.query('SELECT * FROM systemgames;');
+                const allgames = await pool.query('SELECT * FROM systemgames where userid = $1;', [req.body.userId]);
                 res.send({'message':'game duplicated!', 'allGames':allgames.rows});
     
             }
@@ -1230,6 +1297,7 @@ app.post('/getGameByCode', async (req, res) => {
     }
     else {
 
+        if(data.rows[0].gamesleft > 0) {
         const game = await pool.query('SELECT * FROM systemgames WHERE sharecode =$1',[req.body.sharecode]);
 
         if(game.rows.length <1) {   
@@ -1320,6 +1388,11 @@ app.post('/getGameByCode', async (req, res) => {
 
         }
     }
+    else {
+        res.status(401).send({'message':'Cannot play more as gamesleft is 0'})
+    }
+}
+
 }
 catch (err)
 {
