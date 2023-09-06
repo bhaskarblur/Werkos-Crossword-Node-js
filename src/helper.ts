@@ -1,4 +1,3 @@
-import { json } from "body-parser";
 
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
@@ -11,12 +10,12 @@ export const spanishAlphabets = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J
 
 export function randomLimited(limited_List:any[], words:any[]) {
     var wordReturn;
+
     wordReturn = words.splice(Math.floor(Math.random() * (words.length + 1)), 1)[0];
-    if(wordReturn === undefined) {
-       return wordReturn = randomLimited(limited_List, words)
+    if(!limited_List.includes(wordReturn)){
+      return String(wordReturn);  
     }
-   // console.log(wordReturn)
-  return String(wordReturn)
+
   }
 
   export function randomLimitedWithFilter(limited_List:any[], words:any[]) {
@@ -28,9 +27,11 @@ export function randomLimited(limited_List:any[], words:any[]) {
    // console.log(wordReturn)
 
    for( var i = 0; i < words.length; i++) {
+    if(words[i] !== undefined) {
     listReturn.push(cleanWord(words[i]));
+    }
    }
-   console.log('wordReturn', listReturn);
+  //  console.log('wordReturn', listReturn);
    return listReturn;
   }
 

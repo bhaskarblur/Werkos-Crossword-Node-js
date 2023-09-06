@@ -17,6 +17,10 @@ function getRandomDirection() {
   return directions[Math.floor(Math.random() * directions.length)];
 }
 
+function getIncorrectWordsRandomDirection() {
+  const directions = ['horizontal', 'vertical'];
+  return directions[Math.floor(Math.random() * directions.length)];
+}
 
 function canPlaceWord(grid, word, row, col, direction) {
   const wordLength = word.length;
@@ -102,7 +106,7 @@ function fillEmptySpaces(grid, alphabetList) {
   }
 }
 
-export function markWordsInGrid(grid, words, alphabets) {
+export function markWordsInGrid2(grid, words, alphabets, incorrectWords) {
   const markedWords = new Set(); // To track marked words
   const filteredMarkedwords = new Set();
   const maxMarkedWords = 22; // Minimum number of marked words
@@ -116,9 +120,13 @@ export function markWordsInGrid(grid, words, alphabets) {
     let placed = false;
 
     for (let attempt = 0; attempt < 100; attempt++) {
-
-      const direction = getRandomDirection();
-    
+      var direction;
+      if(incorrectWords.includes(word)) {
+      direction = getIncorrectWordsRandomDirection();
+      }
+      else {
+        direction = getRandomDirection();
+      }
 
       // Generate random coordinates within grid bounds
       let row, col;
