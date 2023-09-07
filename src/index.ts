@@ -61,7 +61,53 @@ app.get('/spanish_alphabets', (req, res) => {
     res.send(spanishAlphabets);
   });
 
+app.post('/challenge_crossword', async (req,res) =>  {
 
+});
+app.post('/search_crossword', async (req,res) =>  {
+
+});
+
+app.post('/search_crossword', async (req,res) => {
+    try {
+        const token = await pool.query('select * from usertable where id=$1', [req.body.userId]);
+        const limit = req.body.searchLimit;
+        const keyword = req.body.keyword;
+        
+        if(token.rows[0].accesstoken === req.body.accessToken) {
+
+            const findWord = await pool.query
+            ("SELECT DISTINCT gameid from systemgameallwords where words LIKE '"+ keyword +"%' LIMIT $1;"
+            , [limit]);
+
+            const gamesFound =[]
+
+            if(findWord.rows.length>0) {
+                for(var i=0;i <findWord.rows.length;i++) {
+                    const game = await pool.query
+                    ('SELECT * from systemgames where gameid=$1;', [findWord.rows[i].gameid] );
+
+                    gamesFound.push(game.rows[0]);
+                   }
+    
+
+                res.status(200).send({'message':'Search results!','gamesFound': gamesFound});
+            }
+            else {
+                res.status(404).send({'message':'No game found'});
+            }
+
+    
+        }
+        else {
+            res.status(401).send({'message':'Invalid token!'});
+        }
+    }
+    catch (err)
+    {
+        res.status(400).send({'message':err.message});
+    }
+})
 app.post('/topicwise_crossword', async (req, res) => {
     try {
    
@@ -277,6 +323,7 @@ catch (err)
 
 
   });
+
   app.post('/randomusergenerated_crossword',async (req, res) => {
 
     try {
@@ -856,7 +903,7 @@ app.post('/getUserInfo', async (req, res) => {
     const data= await pool.query('SELECT * FROM usertable WHERE id= $1;', [userid]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
     
@@ -882,6 +929,8 @@ app.post('/getUserInfo', async (req, res) => {
                         await pool.query
                         ('UPDATE subcriptionstatus SET subscriptiontype=$2, startdate=null, enddate=null WHERE userid=$1;',
                          [userid, 'none'])
+
+                         await pool.query('UPDATE systemgames set playstatus=$1 where userid=$2',['limited',userid]);
                         console.log('Subscription ended');
                     }
                 }
@@ -926,7 +975,7 @@ app.post('/getUserInfo', async (req, res) => {
             res.status(200).send(data_);
         }
         else {
-            res.status(403).send({'message':'Invalid accessToken'})
+            res.status(401).send({'message':'Invalid accessToken'})
         }
     }
 }
@@ -980,7 +1029,7 @@ app.post('/addUserGameRecord', async function (req, res) {
     const data= await pool.query('SELECT * FROM usertable WHERE id= $1;', [userid]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
@@ -1009,6 +1058,11 @@ app.post('/addUserGameRecord', async function (req, res) {
                 }
               
             }
+
+            const game_ = await pool.query('SELECT * from systemgames where gameid=$1;', [gameId]);
+            var totalPlayed = game_.rows[0].totalplayed;
+            
+            await pool.query('UPDATE systemgames set totalplayed=$1 where gameid=$2;', [parseInt(totalPlayed)+1, gameId])
             const saveRecord = await pool.
             query("INSERT INTO gameleaderboards VALUES(default,$1, $2, $3,$4, $5, $6 )",[gameId,
             userid,timeScore, crosswordScore, timeScoreText, playerName])
@@ -1022,7 +1076,7 @@ app.post('/addUserGameRecord', async function (req, res) {
            
         }
         else {
-            res.status(403).send({'message':'Invalid accessToken'})
+            res.status(401).send({'message':'Invalid accessToken'})
         }
     }
 
@@ -1040,7 +1094,7 @@ app.post('/getLeaderboards', async(req, res) => {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
@@ -1072,7 +1126,7 @@ app.post('/getLeaderboards', async(req, res) => {
             res.status(200).send(FinalData);
         }
         else {
-            res.status(403).send({'message':'Invalid accessToken'})
+            res.status(401).send({'message':'Invalid accessToken'})
         }
     }
 }
@@ -1248,15 +1302,24 @@ app.post('/createGame', async function (req, res) {
 
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body?.userId]);
 
+  
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
         if(data.rows[0].accesstoken === req.body.accessToken) {
+            var playStatus;
 
-            const final= await pool.query('INSERT INTO systemgames (userid,gamename,gametype,topic,category,searchtype,totalwords,sharecode,gamelanguage,limitedwords,avgratings) VALUES($8,$1,$2,null,null, $3, $4,$5,$7, $6, null); '
-            , [gameName,gameType,searchType, totalWords, shareCode, limitedWords, language, userId])
+            if(data.rows[0].subscriptionstatus === '1year' || data.rows[0].subscriptionstatus=== '1month') {
+                playStatus = 'unlimited';
+            }
+            else {
+                playStatus = 'limited';
+            }
+            const final= await pool.query(
+            'INSERT INTO systemgames (userid,gamename,gametype,topic,category,searchtype,totalwords,sharecode,gamelanguage,limitedwords,avgratings,totalplayed,playstatus) VALUES($8,$1,$2,null,null, $3, $4,$5,$7, $6, null, 0, $9); '
+            , [gameName,gameType,searchType, totalWords, shareCode, limitedWords, language, userId, playStatus])
 
             if(final.rowCount !=1) {
                 res.status(400).send({'message':'There was an error1!'})
@@ -1310,7 +1373,7 @@ app.post('/createGame', async function (req, res) {
             }
         }
         else {
-            res.status(403).send({'message':'Invalid accessToken'})
+            res.status(401).send({'message':'Invalid accessToken'})
         }
     }
 
@@ -1433,7 +1496,7 @@ app.post('/editGame', async function (req, res) {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body?.userId]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
@@ -1524,7 +1587,7 @@ app.post('/editGame', async function (req, res) {
             }
         }
         else {
-            res.status(403).send({'message':'Invalid accessToken'})
+            res.status(401).send({'message':'Invalid accessToken'})
         }
     }
 
@@ -1541,7 +1604,7 @@ app.post('/getAllUserGames', async (req, res) => {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
@@ -1561,7 +1624,7 @@ app.post('/getAllUserGames', async (req, res) => {
             
         }
         else {
-            res.status(403).send({'message':'Invalid accessToken'})
+            res.status(401).send({'message':'Invalid accessToken'})
         }
     }
 }
@@ -1577,7 +1640,7 @@ app.post('/getGameWords', async (req, res) => {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
@@ -1598,7 +1661,7 @@ app.post('/getGameWords', async (req, res) => {
     res.send({'message':'All word details',"allWords":allwords.rows, "correctWords":corrwords.rows, "incorrectWords":incorrwords.rows});
 }
 else {
-    res.status(403).send({'message':'Invalid accessToken'})
+    res.status(401).send({'message':'Invalid accessToken'})
 }
 }
 }
@@ -1614,14 +1677,14 @@ app.post('/getSingleUserGames', async (req, res) => {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
         const game = await pool.query('SELECT * FROM systemgames WHERE gameId =$1',[req.body.gameid]);
 
         if(game.rows.length <1) {   
-            res.status(403).send({'message':'No game found'})
+            res.status(401).send({'message':'No game found'})
         }
         else {
             if(data.rows[0].accesstoken === req.body.accessToken) {
@@ -1649,7 +1712,7 @@ app.post('/getSingleUserGames', async (req, res) => {
 
         }
         else {
-            res.status(403).send({'message':'Invalid accessToken'})
+            res.status(401).send({'message':'Invalid accessToken'})
         }
         }
     }
@@ -1666,7 +1729,7 @@ app.post('/duplicateGame', async (req, res) => {
         const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
     
         if(data.rows.length <1) {   
-            res.status(403).send({'message':'Invalid userId'})
+            res.status(401).send({'message':'Invalid userId'})
         }
         else {
     
@@ -1692,13 +1755,20 @@ app.post('/duplicateGame', async (req, res) => {
                 
             
         
+                var playStatus;
                 var shareCode = generateUserName( game.rows[0].gamename.toLowerCase().replaceAll(" ","") , 4);
                
+                if(data.rows[0].subscriptionstatus === '1year' || data.rows[0].subscriptionstatus=== '1month') {
+                    playStatus = 'unlimited';
+                }
+                else {
+                    playStatus = 'limited';
+                }
             const newGame = 
             await pool.query
-            ('INSERT INTO systemgames (userid,gamename,gametype,topic,category,searchtype,totalwords,sharecode,gamelanguage,limitedwords,avgratings) VALUES($8,$1,$2,null,null, $3, $4,$5,$7, $6, null); '
+            ('INSERT INTO systemgames (userid,gamename,gametype,topic,category,searchtype,totalwords,sharecode,gamelanguage,limitedwords,avgratings,totalplayed, playstatus) VALUES($8,$1,$2,null,null, $3, $4,$5,$7, $6, null, 0, $9); '
             , [game.rows[0].gamename+' - copy',game.rows[0].gametype,game.rows[0].searchtype, 
-            allwords.rows.length, shareCode, game.rows[0].limitedwords, game.rows[0].gamelanguage, req.body.userId])
+            allwords.rows.length, shareCode, game.rows[0].limitedwords, game.rows[0].gamelanguage, req.body.userId, playStatus])
                 
             
             const gameMade = 
@@ -1727,7 +1797,7 @@ app.post('/duplicateGame', async (req, res) => {
     
             }
             else {
-                res.status(403).send({'message':'Invalid accessToken'})
+                res.status(401).send({'message':'Invalid accessToken'})
             }
             }
         }
@@ -1744,7 +1814,7 @@ app.post('/getGameByCode', async (req, res) => {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
@@ -1752,7 +1822,7 @@ app.post('/getGameByCode', async (req, res) => {
         const game = await pool.query('SELECT * FROM systemgames WHERE sharecode =$1',[req.body.sharecode]);
 
         if(game.rows.length <1) {   
-            res.status(403).send({'message':'No game found'})
+            res.status(401).send({'message':'No game found'})
         }
         else {
             const gameid= game.rows[0].gameid;
@@ -1982,7 +2052,7 @@ app.post('/updateUserSubscriptionStatus', async (req, res) => {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
@@ -2018,6 +2088,7 @@ app.post('/updateUserSubscriptionStatus', async (req, res) => {
             console.log(formattedFuture); 
             const limit =  await pool.query('SELECT * from systemsettings;');
             await pool.query('UPDATE usertable set gamesleft=$1 where id=$2', [limit.rows[0].gameslimit, req.body.userId])
+            await pool.query('UPDATE systemgames set playstatus=$1 where userid=$2',['unlimited',req.body.userId]);
             }
             else if(status === '1year') {
                 futureDate.setDate(futureDate.getDate()+365);
@@ -2031,6 +2102,8 @@ app.post('/updateUserSubscriptionStatus', async (req, res) => {
                 console.log(formattedFuture); 
                 const limit =  await pool.query('SELECT * from systemsettings;');
                 await pool.query('UPDATE usertable set gamesleft=$1 where id=$2', [limit.rows[0].gameslimit, req.body.userId])
+
+                await pool.query('UPDATE systemgames set playstatus=$1 where userid=$2',['unlimited',req.body.userId]);
             }
             else {
                 formattedFuture = null;
@@ -2048,7 +2121,7 @@ app.post('/updateUserSubscriptionStatus', async (req, res) => {
 
     }
     else {
-        res.status(403).send({'message':'Invalid accessToken'})
+        res.status(401).send({'message':'Invalid accessToken'})
     }
     }
 }
@@ -2065,7 +2138,7 @@ app.post('/getSubscriptionStatus', async (req, res) => {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
@@ -2089,7 +2162,7 @@ app.post('/addGameRating', async (req, res) => {
     try{
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
@@ -2118,7 +2191,7 @@ app.post('/getGameRating', async (req, res) => {
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
     if(data.rows.length <1) {   
-        res.status(403).send({'message':'Invalid userId'})
+        res.status(401).send({'message':'Invalid userId'})
     }
     else {
 
