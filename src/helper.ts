@@ -11,10 +11,10 @@ export const spanishAlphabets = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J
 export function randomLimited(limited_List:any[], words:any[]) {
     var wordReturn;
 
-    wordReturn = words.splice(Math.floor(Math.random() * (words.length + 1)), 1)[0];
-    if(!limited_List.includes(wordReturn)){
+    wordReturn = words.splice(Math.floor(Math.random() * (words.length)), 1)[0];
+    // if(!limited_List.includes(wordReturn)){
       return String(wordReturn);  
-    }
+    // }
 
   }
 

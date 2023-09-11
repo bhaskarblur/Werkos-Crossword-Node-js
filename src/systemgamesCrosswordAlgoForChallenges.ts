@@ -106,10 +106,10 @@ function fillEmptySpaces(grid, alphabetList) {
   }
 }
 
-export function markWordsInGrid2(grid, words, alphabets, incorrectWords) {
+export function markWordsInGrid2(grid, words, alphabets, incorrectWords, words_limit) {
   const markedWords = new Set(); // To track marked words
   const filteredMarkedwords = new Set();
-  const maxMarkedWords = 22; // Minimum number of marked words
+  const maxMarkedWords = words_limit; // Minimum number of marked words
 
   for (const word of words) {
     const cleanedWord = cleanWord(word);
