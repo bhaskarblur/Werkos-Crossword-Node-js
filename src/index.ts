@@ -6,9 +6,10 @@ import express from 'express';
 import helmet from 'helmet';
 import http from 'http';
 import { findWordPositions } from './findWordAlgo';
+import { markFixedWordsInGrid } from './fixedgamesCrosswordAlgo';
+import { markFixedWordsInGrid2 } from './fixedgamesCrosswordAlgochallenge';
 import { cleanWord, englishAlphabets, generateAccessToken, generateUserName, randomLimited, randomLimitedWithFilter, spanishAlphabets } from './helper';
-import { initializeGrid, populateGrid } from './newCrosswordAlgo';
-import { markWordsInGrid } from './systemgamesCrosswordAlgo';
+import { initializeGrid, markWordsInGrid } from './systemgamesCrosswordAlgo';
 import { markWordsInGrid2 } from './systemgamesCrosswordAlgoForChallenges';
 const Pool = require('pg').Pool
 const pool = new Pool({
@@ -79,7 +80,7 @@ app.post('/search_crossword', async (req,res) => {
             if(findWord.rows.length>0) {
                 for(var i=0;i <findWord.rows.length;i++) {
                     const game = await pool.query
-                    ('SELECT * from systemgames where gameid=$1 AND limitedwords > $2 ;', [findWord.rows[i].gameid, req.body.words_limit] );
+                    ('SELECT * from systemgames where gameid=$1 AND limitedwords >= $2 ;', [findWord.rows[i].gameid, req.body.words_limit] );
 
                     if(game.rows[0] !=null) {
                     gamesFound.push(game.rows[0]);
@@ -287,10 +288,10 @@ catch (err)
                 
                 var allGames =[];
                 const gamesSort1 = await pool.query
-                ('select * from systemgames where searchtype=$1 AND limitedwords > $4 AND gamelanguage=$2 AND playstatus=$3;',
+                ('select * from systemgames where searchtype=$1 AND limitedwords >= $4 AND gamelanguage=$2 AND playstatus=$3;',
                 [req.body.type, req.body.language, 'unlimited', req.body.words_limit] );
                const gamesSort2 =await pool.query
-               ('select * from systemgames where searchtype=$1 AND gamelanguage=$2 AND limitedwords > $4 AND playstatus=$3 AND totalplayed < 6;',
+               ('select * from systemgames where searchtype=$1 AND gamelanguage=$2 AND limitedwords >= $4 AND playstatus=$3 AND totalplayed < 6;',
                [req.body.type, req.body.language, 'limited', req.body.words_limit] );
                
                 while(gameIsEligible === false ) {
@@ -491,13 +492,13 @@ catch (err)
 
         if(req.body.language === 'es') {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            // populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
         else {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            // populateGrid(grid, limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
@@ -506,13 +507,13 @@ catch (err)
         if(req.body.language === 'es') {
 
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
+            // populateGrid(grid, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
         else {
             const grid = initializeGrid(14, 11);
-            populateGrid(grid, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+            // populateGrid(grid, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             // crossword = generateCrossword(limited_words, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
             crossword = grid
         }
@@ -1588,7 +1589,7 @@ app.post('/createGame', async function (req, res) {
 
             if(req.body.searchType === 'search') {
                 const grid_ = initializeGrid(14, 11);
-                const { grid, markedWords, filteredMarkedwords } = markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                const { grid, markedWords, filteredMarkedwords } = markFixedWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
                 req.body.limitedWords );
                 console.log('check mark this: ' + markedWords);
                 const game_ = await pool.query
@@ -1607,7 +1608,7 @@ app.post('/createGame', async function (req, res) {
             }
             else {
                 const grid_ = initializeGrid(14, 11);
-                const { grid, markedWords, filteredMarkedwords } = markWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                const { grid, markedWords, filteredMarkedwords } = markFixedWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
                 incorrectWords, req.body.limitedWords );
                 console.log('check mark this: ' + markedWords);
 
@@ -1848,7 +1849,7 @@ app.post('/editGame', async function (req, res) {
                 await pool.run('DELETE from gridstable where gameid=$1;', [gameId]);
                 if(req.body.searchType === 'search') {
                     const grid_ = initializeGrid(14, 11);
-                    const { grid, markedWords, filteredMarkedwords } = markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ',
+                    const { grid, markedWords, filteredMarkedwords } = markFixedWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ',
                     req.body.limitedWords );
                     console.log('check mark this: ' + markedWords);
     
@@ -1861,7 +1862,7 @@ app.post('/editGame', async function (req, res) {
                 }
                 else {
                     const grid_ = initializeGrid(14, 11);
-                    const { grid, markedWords, filteredMarkedwords } = markWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ',
+                    const { grid, markedWords, filteredMarkedwords } = markFixedWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ',
                     incorrectWords, req.body.limitedWords );
                     console.log('check mark this: ' + markedWords);
     
@@ -2133,6 +2134,8 @@ app.post('/getGameByCode', async (req, res) => {
         }
         else {
             const gameid= game.rows[0].gameid;
+
+            if(game.rows[0].totalplayed < 6 || game.rows[0].playstatus === 'unlimited') {
             const allwords = await pool.query
             ('SELECT * FROM systemgameallwords WHERE gameid=$1'
             ,[gameid]);
@@ -2317,6 +2320,10 @@ app.post('/getGameByCode', async (req, res) => {
         , "crossword_grid":crossword});
 
         }
+        else {
+            res.status(401).send({'message':'You cannot play this game as this game already reached the limit!'})
+        }
+    }
     }
     else {
         res.status(401).send({'message':'Cannot play more as gamesleft is 0'})
