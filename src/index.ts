@@ -1676,8 +1676,8 @@ app.post('/systemCreateGame', async function (req, res) {
   
 
             const final= await pool.query
-            ('INSERT INTO systemgames (userid,gamename,gametype,topic,category,searchtype,totalwords,sharecode,gamelanguage,limitedwords,avgratings,playstatus, gridtype, category, topic) VALUES($8,$1,$2,null,null, $3, $4,$5,$7, $6, null, $10, $9); '
-            , [gameName,'system',searchType, totalWords, shareCode, limitedWords, language, 0, req.body.gridType, 'unlimited', category, topic])
+            ('INSERT INTO systemgames (userid,gamename,gametype,searchtype,totalwords,sharecode,gamelanguage,limitedwords,avgratings,playstatus, gridtype, category, topic) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); '
+            , [0, gameName,'system',searchType, totalWords, shareCode, language ,limitedWords, 0.0, 'unlimited' ,  req.body.gridType, category, topic])
 
             if(final.rowCount !=1) {
                 res.status(400).send({'message':'There was an error!'})
@@ -1736,7 +1736,7 @@ app.post('/systemCreateGame', async function (req, res) {
 catch (err)
 {
     res.status(400).send({'message':err.message});
-}
+}    
 });
 
 app.post('/editGame', async function (req, res) {
@@ -2091,10 +2091,10 @@ app.post('/duplicateGame', async (req, res) => {
                 }
             
                 }
-                const gameGrid = await pool.query('SELECT * from gamesGrid WHERE gameid=$1; ', [req.body.gameid]);
+                const gameGrid = await pool.query('SELECT * from gridstable WHERE gameid=$1; ', [req.body.gameid]);
 
                 for(var i=0;i<gameGrid.rows.length; i++) {
-                    await pool.run('INSERT INTO gamesGrid(gameid, alphabet) VALUES($1, $2);', 
+                    await pool.run('INSERT INTO gridstable(gameid, alphabet) VALUES($1, $2);', 
                     [gameMade.rows[0].gameid, gameGrid.rows[i].alphabet])
                 }
             
