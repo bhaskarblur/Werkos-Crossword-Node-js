@@ -80,7 +80,7 @@ app.post('/search_crossword', async (req,res) => {
             if(findWord.rows.length>0) {
                 for(var i=0;i <findWord.rows.length;i++) {
                     const game = await pool.query
-                    ('SELECT * from systemgames where gameid=$1 AND limitedwords >= $2 ;', [findWord.rows[i].gameid, req.body.words_limit] );
+                    ('SELECT * from systemgames where gameid=$1 AND limitedwords >= $2 ;', [findWord.rows[i].gameid,  parseInt(req.body.words_limit) - 1] );
 
                     if(game.rows[0] !=null) {
                     gamesFound.push(game.rows[0]);
@@ -289,10 +289,10 @@ catch (err)
                 var allGames =[];
                 const gamesSort1 = await pool.query
                 ('select * from systemgames where searchtype=$1 AND limitedwords >= $4 AND gamelanguage=$2 AND playstatus=$3;',
-                [req.body.type, req.body.language, 'unlimited', req.body.words_limit] );
+                [req.body.type, req.body.language, 'unlimited',  parseInt(req.body.words_limit) - 1 ] );
                const gamesSort2 =await pool.query
                ('select * from systemgames where searchtype=$1 AND gamelanguage=$2 AND limitedwords >= $4 AND playstatus=$3 AND totalplayed < 6;',
-               [req.body.type, req.body.language, 'limited', req.body.words_limit] );
+               [req.body.type, req.body.language, 'limited',  parseInt(req.body.words_limit) - 1] );
                
                 while(gameIsEligible === false ) {
 
