@@ -8,7 +8,7 @@ import http from 'http';
 import { findWordPositions } from './findWordAlgo';
 import { markFixedWordsInGrid } from './fixedgamesCrosswordAlgo';
 import { markFixedWordsInGrid2 } from './fixedgamesCrosswordAlgochallenge';
-import { cleanWord, englishAlphabets, generateAccessToken, generateUserName, randomLimited, randomLimitedWithFilter, spanishAlphabets } from './helper';
+import { cleanWord, englishAlphabets, generateAccessToken, generateUserName, randomLimited, randomLimitedWithFilter, shuffleArray, spanishAlphabets } from './helper';
 import { initializeGrid, markWordsInGrid } from './systemgamesCrosswordAlgo';
 import { markWordsInGrid2 } from './systemgamesCrosswordAlgoForChallenges';
 const Pool = require('pg').Pool
@@ -171,6 +171,8 @@ app.post('/topicwise_crossword', async (req, res) => {
         if(row?.searchtype === 'search') {
         if(row?.gamelanguage === 'es') {
             const grid_ = initializeGrid(14, 11);
+            console.log('originalArray: '+allWords);
+                    console.log('shuffledArray: '+shuffleArray(allWords));
             const { grid, markedWords, filteredMarkedwords } = markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' , 
             req.body.words_limit);
             console.log(markedWords);
@@ -185,6 +187,8 @@ app.post('/topicwise_crossword', async (req, res) => {
     }
     else {
         const grid_ = initializeGrid(14, 11);
+        console.log('originalArray: '+allWords);
+                    console.log('shuffledArray: '+shuffleArray(allWords));
         const { grid, markedWords, filteredMarkedwords } = markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         , req.body.words_limit );
         console.log(markedWords);
@@ -201,6 +205,8 @@ app.post('/topicwise_crossword', async (req, res) => {
         else {
             if(row?.gamelanguage === 'es') {
                 const grid_ = initializeGrid(14, 11);
+                console.log('originalArray: '+allWords);
+                    console.log('shuffledArray: '+shuffleArray(allWords));
                 const { grid, markedWords, filteredMarkedwords } = markWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ' 
             , incorrectWords, req.body.words_limit);
                 console.log(markedWords);
@@ -215,6 +221,8 @@ app.post('/topicwise_crossword', async (req, res) => {
         }
         else {
             const grid_ = initializeGrid(14, 11);
+            console.log('originalArray: '+allWords);
+                    console.log('shuffledArray: '+shuffleArray(allWords));
             const { grid, markedWords, filteredMarkedwords } = markWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
             ,incorrectWords , req.body.words_limit);
             console.log(markedWords);
@@ -273,6 +281,7 @@ catch (err)
 
   app.post('/randomsearch_crossword',async (req, res) => {
 
+    
    try {
 
     const token = await pool.query('select * from usertable where id=$1', [req.body.userId]);
@@ -352,8 +361,11 @@ catch (err)
             if(singleGame?.searchtype === 'search') {
                 
             if(singleGame?.gamelanguage === 'es') {
+                
     
             const grid_ = initializeGrid(14, 11);
+            console.log('originalArray: '+allWords);
+            console.log('shuffledArray: '+shuffleArray(allWords));
             const { grid, markedWords, filteredMarkedwords } = 
             markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ', req.body.words_limit );
             console.log('marked: '+markedWords);
@@ -372,6 +384,8 @@ catch (err)
 
         else {
             const grid_ = initializeGrid(14, 11);
+            console.log('originalArray: '+allWords);
+            console.log('shuffledArray: '+shuffleArray(allWords));
             const { grid, markedWords, filteredMarkedwords } =
              markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' , req.body.words_limit );
             console.log('marked: '+markedWords);
@@ -394,6 +408,8 @@ catch (err)
                 if(singleGame?.gamelanguage === 'es') {
     
                     const grid_ = initializeGrid(14, 11);
+                    console.log('originalArray: '+allWords);
+                    console.log('shuffledArray: '+shuffleArray(allWords));
                     const { grid, markedWords, filteredMarkedwords } = markWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'
                     , incorrectWords , req.body.words_limit);
                    console.log('marked: '+markedWords);
@@ -411,7 +427,12 @@ catch (err)
                 }
         
                 else {
+            
+            console.log('----------------------------'); 
                     const grid_ = initializeGrid(14, 11);
+                    console.log('originalArray: '+allWords);
+                    console.log('----------------------------');          
+                    console.log('shuffledArray: '+shuffleArray(allWords));
                     const { grid, markedWords, filteredMarkedwords } = markWordsInGrid2(grid_, allWords, 
                         'ABCDEFGHIJKLMNOPQRSTUVWXYZ' , incorrectWords, req.body.words_limit  );
                         console.log('marked: '+markedWords);
@@ -1598,7 +1619,7 @@ app.post('/createGame', async function (req, res) {
                 for(var i=0;i<grid.length;i++) {
                    
                     for(var j=0;j<grid[i].length;j++) {
-                    console.log('alpha:'+grid[i][j]);
+                    // console.log('alpha:'+grid[i][j]);
                 
                         await pool.query('INSERT INTO gridstable(gameid, alphabet) VALUES($1, $2);', 
                         [game_.rows[0].gameid, grid[i][j]]);
@@ -1610,7 +1631,7 @@ app.post('/createGame', async function (req, res) {
                 const grid_ = initializeGrid(14, 11);
                 const { grid, markedWords, filteredMarkedwords } = markFixedWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
                 incorrectWords, req.body.limitedWords );
-                console.log('check mark this: ' + markedWords);
+                console.log('check mark this2: ' + markedWords);
 
                 const game_ = await pool.query
                 ('SELECT * from systemgames where userid=$1 AND gamename=$2 AND searchtype=$3 AND totalwords=$4 AND gamelanguage=$5 AND gridtype=$6;'
@@ -1642,6 +1663,30 @@ catch (err)
     res.status(400).send({'message':err.message});
 }
 });
+
+app.post('/deleteGame', async function (req, res) {
+    try{
+
+        await pool.query('DELETE from systemgames where gameid=$1;', [req.body.gameId]);
+
+        await pool.query('DELETE from systemgameallwords where gameid=$1', [req.body.gameId]);
+
+        await pool.query('DELETE from systemgamecorrectwords where gameid=$1', [req.body.gameId]);
+
+        await pool.query('DELETE from systemgameincorrectwords where gameid=$1', [req.body.gameId]);
+
+        await pool.query('DELETE from gridstable where gameid=$1', [req.body.gameId]);
+
+            await pool.query('DELETE from gameleaderboards where gameid=$1', [req.body.gameId]);
+
+            res.status(200).send({'message':'Game deleted successfully!'})
+    }
+    catch (err) {
+        res.status(403).send({'message':err })
+    }
+}
+);
+
 
 app.post('/systemCreateGame', async function (req, res) {
 
@@ -2420,6 +2465,8 @@ app.post('/getGameByCode_backup', async (req, res) => {
                 if(singleGame?.gamelanguage === 'es') {
         
                 const grid_ = initializeGrid(14, 11);
+                console.log('originalArray: '+allWords);
+                    console.log('shuffledArray: '+shuffleArray(allWords));
                 const { grid, markedWords, filteredMarkedwords } = 
                 markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ', req.body.words_limit );
                 console.log('marked: '+markedWords);
@@ -2438,6 +2485,8 @@ app.post('/getGameByCode_backup', async (req, res) => {
     
             else {
                 const grid_ = initializeGrid(14, 11);
+                console.log('originalArray: '+allWords);
+                    console.log('shuffledArray: '+shuffleArray(allWords));
                 const { grid, markedWords, filteredMarkedwords } =
                  markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' , req.body.words_limit );
                 console.log('marked: '+markedWords);
@@ -2460,6 +2509,8 @@ app.post('/getGameByCode_backup', async (req, res) => {
                     if(singleGame?.gamelanguage === 'es') {
         
                         const grid_ = initializeGrid(14, 11);
+                        console.log('originalArray: '+allWords);
+                    console.log('shuffledArray: '+shuffleArray(allWords));
                         const { grid, markedWords, filteredMarkedwords } = markWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'
                         , incorrectWords , req.body.words_limit);
                        console.log('marked: '+markedWords);
@@ -2478,6 +2529,8 @@ app.post('/getGameByCode_backup', async (req, res) => {
             
                     else {
                         const grid_ = initializeGrid(14, 11);
+                        console.log('originalArray: '+allWords);
+                    console.log('shuffledArray: '+shuffleArray(allWords));
                         const { grid, markedWords, filteredMarkedwords } = markWordsInGrid2(grid_, allWords, 
                             'ABCDEFGHIJKLMNOPQRSTUVWXYZ' , incorrectWords, req.body.words_limit  );
                             console.log('marked: '+markedWords);

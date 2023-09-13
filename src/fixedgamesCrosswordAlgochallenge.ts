@@ -170,6 +170,7 @@ export function markFixedWordsInGrid2(grid, words, alphabets, incorrectWords, ma
   const occupiedPositions = initializeGrid(grid.length, grid[0].length, false);
 
   for (const word of words) {
+   
     const cleanedWord = cleanWord(word);
 
     // Check if the maximum number of marked words has been reached
@@ -178,7 +179,8 @@ export function markFixedWordsInGrid2(grid, words, alphabets, incorrectWords, ma
     }
 
     let placed = false;
-
+    console.log('this is word: '+word);
+    console.log(incorrectWords.includes(word));
     for (let attempt = 0; attempt < 100; attempt++) {
       var direction;
       if(incorrectWords.includes(word)) {
