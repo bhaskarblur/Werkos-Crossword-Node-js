@@ -1236,6 +1236,7 @@ catch (err)
 app.post('/systemupdateGameLimit', async function (req, res) {
 
     try{
+        console.log('input: '+req.body.gamesLimit)
         const query = await pool.query('SELECT * from systemsettings;');
         const oldlimit =  query.rows[0].gameslimit;
         await pool.query('UPDATE systemsettings set gameslimit=$1 where id=1;', [parseInt(req.body.gamesLimit)]);
@@ -1816,6 +1817,7 @@ app.post('/systemEditGame', async function (req, res) {
        var correctWords:[];
        var incorrectWords:[];
        console.log(req.body.correctWords);
+       console.log('body'+req.body);
        if(req.body.correctWords !== undefined) {
        correctWords= JSON.parse( req.body.correctWords);
        incorrectWords = JSON.parse( req.body.incorrectWords);
@@ -2155,7 +2157,7 @@ app.post('/getSingleUserGames', async (req, res) => {
         const game = await pool.query('SELECT * FROM systemgames WHERE gameId =$1',[req.body.gameid]);
 
         if(game.rows.length <1) {   
-            res.status(401).send({'message':'No game found'})
+            res.status(404).send({'message':'No game found'})
         }
         else {
             if(data.rows[0].accesstoken === req.body.accessToken) {
@@ -2293,12 +2295,237 @@ app.post('/duplicateGame', async (req, res) => {
     }
 })
 
+
+app.post('/getGameByCode_admin', async (req, res) => {
+
+    try{
+        console.log('userId: '+req.body.userId)
+        console.log('token: '+req.body.accessToken)
+        console.log('code: '+req.body.sharecode)
+    const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
+
+
+        const game = await pool.query('SELECT * FROM systemgames WHERE sharecode =$1',[req.body.sharecode]);
+
+        if(game.rows.length <1) {   
+            res.status(404).send({'message':'No game found'})
+        }
+    
+        else {
+            const gameid= game.rows[0].gameid;
+
+            if(game.rows[0].totalplayed < 6 || game.rows[0].playstatus === 'unlimited') {
+            const allwords = await pool.query
+            ('SELECT * FROM systemgameallwords WHERE gameid=$1'
+            ,[gameid]);
+        
+            const corrwords = await pool.query
+            ('SELECT * FROM systemgamecorrectwords WHERE gameid=$1'
+            ,[gameid]);
+        
+            const incorrwords = await pool.query
+            ('SELECT * FROM systemgameincorrectwords WHERE gameid=$1'
+            ,[gameid]);
+
+            var allWords=[];
+            var correctWords=[];
+            var incorrectWords=[];
+    
+            for(let i=0; i<allwords.rows.length; i++) {
+                allWords.push(allwords.rows[i].words);
+            }
+    
+            for(let i=0; i<corrwords.rows.length; i++) {
+                correctWords.push(cleanWord(String(corrwords.rows[i].words)));
+            }
+            
+            for(let i=0; i<incorrwords.rows.length; i++) {
+                incorrectWords.push(cleanWord(incorrwords.rows[i].words));
+            }
+    
+            var limited_words =[];
+            var filtered_words = []
+        
+            var crossword;
+            var singleGame =  game.rows[0];
+      
+            if(singleGame?.searchtype === 'search') {
+
+
+            if(singleGame?.gridtype === 'fixed') {
+
+                // Get grid of the game;
+
+                const grid = await pool.query('SELECT * from gridsTable where gameid=$1', [singleGame?.gameid]);
+
+                const temp_grid = []
+                for(let i = 0; i < grid.rows.length; i++) {
+                    temp_grid.push(grid.rows[i].alphabet);
+
+                }
+                const grid_list = [];
+                const numberOfSublists = 14;
+                const elementsPerSublist = Math.ceil(temp_grid.length / numberOfSublists);
+                
+                for (let i = 0; i < temp_grid.length; i += elementsPerSublist) {
+                    const sublist = temp_grid.slice(i, i + elementsPerSublist);
+                    grid_list.push(sublist);
+                  }
+              
+              
+                    limited_words = allWords;
+                    filtered_words.push(randomLimitedWithFilter(filtered_words[0], limited_words));
+                    crossword = grid_list;
+          
+        
+        
+            }
+            else {
+                if(singleGame?.gamelanguage === 'es') {
+    
+                    const grid_ = initializeGrid(14, 11);
+                    const { grid, markedWords, filteredMarkedwords } = 
+                    markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ', singleGame?.limitedwords );
+                    console.log('marked: '+markedWords);
+                      
+                    for(let i=0; i <= singleGame?.limitedwords; i++) {
+                            // console.log(i);
+                            limited_words.push(randomLimited(limited_words, markedWords));
+                        
+                 
+                    } 
+                    limited_words = Array.from(limited_words).filter(e => e !== 'undefined');
+                    filtered_words.push(randomLimitedWithFilter(filtered_words[0], limited_words));
+                    crossword = grid
+                }
+        
+                else {
+                    const grid_ = initializeGrid(14, 11);
+                    const { grid, markedWords, filteredMarkedwords } =
+                     markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' , singleGame?.limitedwords);
+                    console.log('marked: '+markedWords);
+                      
+                    for(let i=0; i <= singleGame?.limitedwords; i++) {
+                            // console.log(i);
+                            limited_words.push(randomLimited(limited_words, markedWords));
+                        
+                 
+                    } 
+                    limited_words = Array.from(limited_words).filter(e => e !== 'undefined');
+                    filtered_words.push(randomLimitedWithFilter(filtered_words[0], limited_words));
+                    crossword = grid
+                }
+            }
+        }
+        else {
+            
+            if(singleGame?.gridtype === 'fixed') {
+
+                // Get grid of the game;
+
+                const grid = await pool.query('SELECT * from gridsTable where gameid=$1', [singleGame?.gameid]);
+                const grid_list = [];
+                const numberOfSublists = 14;
+                const elementsPerSublist = Math.ceil(grid.rows.length / numberOfSublists);
+                
+                const temp_grid = []
+                for(let i = 0; i < grid.rows.length; i++) {
+                    temp_grid.push(grid.rows[i].alphabet);
+
+                }
+
+                for (let i = 0; i < temp_grid.length; i += elementsPerSublist) {
+                    const sublist = temp_grid.slice(i, i + elementsPerSublist);
+                    grid_list.push(sublist);
+                  }
+              
+              
+                    limited_words = allWords;
+                    filtered_words.push(randomLimitedWithFilter(filtered_words[0], limited_words));
+                    crossword = grid_list;
+          
+        
+        
+          
+        
+        
+            }
+
+            else {
+                if(singleGame?.gamelanguage === 'es') {
+    
+                    const grid_ = initializeGrid(14, 11);
+                    const { grid, markedWords, filteredMarkedwords } = 
+                    markWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ', incorrectWords, singleGame?.limitedwords );
+                    console.log('marked: '+markedWords);
+                      
+                    for(let i=0; i <= singleGame?.limitedwords; i++) {
+                            // console.log(i);
+                            limited_words.push(randomLimited(limited_words, markedWords));
+                        
+                 
+                    } 
+                    limited_words = Array.from(limited_words).filter(e => e !== 'undefined');
+                    filtered_words.push(randomLimitedWithFilter(filtered_words[0], limited_words));
+                    crossword = grid
+                }
+        
+                else {
+                    const grid_ = initializeGrid(14, 11);
+                    const { grid, markedWords, filteredMarkedwords } =
+                     markWordsInGrid2(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' ,incorrectWords,  singleGame?.limitedwords);
+                    console.log('marked: '+markedWords);
+                      
+                    for(let i=0; i <= singleGame?.limitedwords; i++) {
+                            // console.log(i);
+                            limited_words.push(randomLimited(limited_words, markedWords));
+                        
+                 
+                    } 
+                    limited_words = Array.from(limited_words).filter(e => e !== 'undefined');
+                    filtered_words.push(randomLimitedWithFilter(filtered_words[0], limited_words));
+                    crossword = grid
+                }
+            }
+        }
+
+        const finalWords= jcc.upperCaseAll(crossword);
+
+       
+        
+            res.send({'gameDetails':game.rows[0],"allWords":allWords, 
+            "correctWords":correctWords, "incorrectWords":incorrectWords, 'limitedWords':limited_words, 
+            "filteredWords":filtered_words
+        , "crossword_grid":crossword});
+
+      
+      
+    
+ 
+    // else {
+        // res.status(401).send({'message':'Cannot play more as gamesleft is 0'})
+    // }
+// }
+    }
+}
+}
+catch (err)
+{
+    console.log('err'+err.message);
+    res.status(400).send({'message':err.message});
+}
+
+});
+
 app.post('/getGameByCode', async (req, res) => {
 
     try{
+        console.log('userId: '+req.body.userId)
+        console.log('token: '+req.body.accessToken)
+        console.log('code: '+req.body.sharecode)
     const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
 
-    if(data.rows.length <1) {   
+    if(data.rows.length <1 ) {   
         res.status(401).send({'message':'Invalid userId'})
     }
     else {
@@ -2307,8 +2534,9 @@ app.post('/getGameByCode', async (req, res) => {
         const game = await pool.query('SELECT * FROM systemgames WHERE sharecode =$1',[req.body.sharecode]);
 
         if(game.rows.length <1) {   
-            res.status(401).send({'message':'No game found'})
+            res.status(404).send({'message':'No game found'})
         }
+    
         else {
             const gameid= game.rows[0].gameid;
 
