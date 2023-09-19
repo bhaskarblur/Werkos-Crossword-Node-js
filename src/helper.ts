@@ -57,7 +57,7 @@ export function generateUserName(username:string, length) {
    return username+result;
 }
 
-export function cleanWord(word) {
+export function cleanWord(word: String) {
    const replacements = {
      'eÈÉÊËèéêë': 'E',
      'aÀÁÂÃÄÅàáâãäå': 'A',
@@ -96,13 +96,12 @@ export function cleanWord(word) {
    for (const k in replacements) {
      const chars = k.split('');
      for (const char of chars) {
-       word = word.split(char).join(replacements[k]);
+       word = word.split(char).join(replacements[k])
      }
    }
  
    // Remove spaces, dashes, periods, commas, and single quotes, and convert to uppercase
-
-   return word.trim().replaceAll('.', '').replaceAll('-','').replaceAll(' ','').replace("'","").
+   return word.replaceAll('.', '').replaceAll('-','').replaceAll(' ','').replace("'","").
    replaceAll('!','').replaceAll('_', '').replaceAll('@', '').replaceAll(',','').replaceAll('/','');
 
   
