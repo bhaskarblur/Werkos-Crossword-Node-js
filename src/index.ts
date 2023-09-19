@@ -2519,7 +2519,7 @@ catch (err)
 
 app.post('/getGameByCode', async (req, res) => {
 
-    try{
+    // try{
         console.log('userId: '+req.body.userId)
         console.log('token: '+req.body.accessToken)
         console.log('code: '+req.body.sharecode)
@@ -2735,11 +2735,11 @@ app.post('/getGameByCode', async (req, res) => {
     }
 }
 
-}
-catch (err)
-{
-    res.status(400).send({'message':err.message});
-}
+// }
+// catch (err)
+// {
+    // res.status(400).send({'message':err.message});
+// }
 });
 
 app.post('/getGameByCode_backup', async (req, res) => {
@@ -3066,7 +3066,7 @@ app.post('/addGameRating', async (req, res) => {
 catch (err)
 {
     res.status(400).send({'message':err.message});
-}
+}   
 });
 
 app.post('/getGameRating', async (req, res) => {
