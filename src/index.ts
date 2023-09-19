@@ -1544,7 +1544,7 @@ app.post('/createGame', async function (req, res) {
 
     var correctWords:[];
     var incorrectWords:[];
-    if(req.body.correctWords!==undefined) {
+    if(req.body.searchType === 'challenge'){
         correctWords = JSON.parse( req.body?.correctWords);
         incorrectWords = JSON.parse( req.body?.incorrectWords);
     }
@@ -1680,7 +1680,7 @@ catch (err)
 
 app.post('/deleteGame', async function (req, res) {
     try{
-
+console.log('id', req.body.gameId);
         await pool.query('DELETE from systemgames where gameid=$1;', [req.body.gameId]);
 
         await pool.query('DELETE from systemgameallwords where gameid=$1', [req.body.gameId]);
@@ -1713,13 +1713,13 @@ app.post('/systemCreateGame', async function (req, res) {
     var language = req.body?.gameLanguage;
     var gameType = req.body?.gameType;
     var searchType = req.body?.searchType;
-    var shareCode = generateUserName(  gameName.toLowerCase().replaceAll(" ","") , 4);
+    var shareCode = generateUserName(String( cleanWord(String(gameName.toLowerCase()))) , 4);
 
     var allWords:[]=    JSON.parse(req.body?.allWords);
 
     var correctWords:[];
     var incorrectWords:[];
-    if(req.body.correctWords!==undefined) {
+    if(req.body.searchType === 'challenge') {
         correctWords = JSON.parse( req.body?.correctWords);
         incorrectWords = JSON.parse( req.body?.incorrectWords);
     }
@@ -1758,7 +1758,7 @@ app.post('/systemCreateGame', async function (req, res) {
 
                 }
 
-                if(req.body.correctWords !==undefined) {
+                if(req.body.searchType === 'challenge'){
                 for(let j=0;j<correctWords.length;j++) {
                     const word= correctWords[j];
                     const addWord = await pool.query('INSERT INTO systemgamecorrectwords(gameid,words) VALUES($1, $2)', [data.rows[0].gameid, word]);
@@ -1810,14 +1810,14 @@ app.post('/systemEditGame', async function (req, res) {
        var language = req.body?.gameLanguage;
        var gameType = req.body?.gameType;
        var searchType = req.body?.searchType;
-       var shareCode = generateUserName(  gameName.toLowerCase().replaceAll(" ","") , 4);
+       var shareCode = generateUserName(String( cleanWord(String(gameName.toLowerCase()))) , 4);
    
        var allWords:[]=    JSON.parse(req.body?.allWords);
    
        var correctWords:[];
        var incorrectWords:[];
        console.log(req.body.correctWords);
-       console.log('body'+req.body);
+       console.log('body'+req.body.gameName);
        if(req.body.correctWords !== undefined) {
        correctWords= JSON.parse( req.body.correctWords);
        incorrectWords = JSON.parse( req.body.incorrectWords);
