@@ -1500,6 +1500,10 @@ try{
     await pool.query('SELECT * from categories where id=$1;',
     [categoryid]);
 
+    console.log(req.body.categoryId);
+    console.log(req.body.topicId);
+    console.log(status);
+    console.log(language);
     if(categorycheck.rows.length > 0) {
         const topicData = await pool.query('SELECT * from topics where id=$1', [topicid]);
         const category= await pool.query
@@ -1525,6 +1529,33 @@ try{
     res.status(400).send({'message':err.message});
 }
 });
+
+app.post('/deleteCategoryTopic', async function (req, res) {
+    try{
+        const categoryid = req.body.categoryId;
+        const topicid = req.body.topicId;
+        const categoryName = req.body.categoryName;
+        const language = req.body.language;
+        const searchType = req.body.searchType;
+        const status = req.body.status;
+        console.log(req.body.topicId);
+    
+        const topicData = await pool.query('SELECT * from topics where id=$1', [topicid]);
+
+        const topicName = topicData.rows[0].topicsname;
+
+        await pool.query('DELETE from topics where id=$1',
+        [topicid]);
+        
+        await pool.query('UPDATE systemgames set category = null , topic=null where topic=$1', [topicName]);
+
+        res.status(200).send({'message': 'Topic deleted successfully!'});
+    }
+        catch (err)
+    {
+        res.status(400).send({'message':err.message});
+    }
+    });
 
 app.post('/createGame', async function (req, res) {
 
