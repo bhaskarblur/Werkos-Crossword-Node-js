@@ -2519,7 +2519,7 @@ catch (err)
 
 app.post('/getGameByCode', async (req, res) => {
 
-    // try{
+    try{
         console.log('userId: '+req.body.userId)
         console.log('token: '+req.body.accessToken)
         console.log('code: '+req.body.sharecode)
@@ -2561,7 +2561,10 @@ app.post('/getGameByCode', async (req, res) => {
                 allWords.push(allwords.rows[i].words);
             }
     
+      
             for(let i=0; i<corrwords.rows.length; i++) {
+                console.log('correcWordsRow: '+corrwords.rows[i]);
+                console.log('correcWords: '+corrwords.rows[i].words);
                 correctWords.push(cleanWord(String(corrwords.rows[i].words)));
             }
             
@@ -2735,11 +2738,11 @@ app.post('/getGameByCode', async (req, res) => {
     }
 }
 
-// }
-// catch (err)
-// {
-    // res.status(400).send({'message':err.message});
-// }
+}
+catch (err)
+{
+    res.status(400).send({'message':err.message});
+}
 });
 
 app.post('/getGameByCode_backup', async (req, res) => {

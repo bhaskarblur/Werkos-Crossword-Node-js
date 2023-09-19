@@ -101,13 +101,11 @@ export function cleanWord(word) {
    }
  
    // Remove spaces, dashes, periods, commas, and single quotes, and convert to uppercase
-   if(word !=null && word != undefined) {
+
    return word.trim().replaceAll('.', '').replaceAll('-','').replaceAll(' ','').replace("'","").
    replaceAll('!','').replaceAll('_', '').replaceAll('@', '').replaceAll(',','').replaceAll('/','');
-   }
-   else {
-    return word;
-   }
+
+  
  }
 
 
