@@ -90,7 +90,16 @@ export function cleanWord(word: String) {
      'ð': 'Ð',
      'ñ': 'Ñ',
      'ý': 'Ý',
-     'þ': 'Þ'
+     'þ': 'Þ',
+     '.': '',
+     '-' :'',
+     ' ' : '',
+     "'" : '',
+     '!' : '',
+     '_' : '',
+     '@' : '',
+     ',' : '',
+     '/'  : ''
    };
  
    for (const k in replacements) {
@@ -101,9 +110,10 @@ export function cleanWord(word: String) {
    }
  
    // Remove spaces, dashes, periods, commas, and single quotes, and convert to uppercase
-   return word.replaceAll('.', '').replaceAll('-','').replaceAll(' ','').replace("'","").
-   replaceAll('!','').replaceAll('_', '').replaceAll('@', '').replaceAll(',','').replaceAll('/','');
+  //  return word.replaceAll('.', '').replaceAll('-','').replaceAll(' ','').replace("'","").
+  //  replaceAll('!','').replaceAll('_', '').replaceAll('@', '').replaceAll(',','').replaceAll('/','');
 
+  return word;
   
  }
 
