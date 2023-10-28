@@ -17,6 +17,7 @@ import {
 } from './helper';
 import { initializeGrid, markWordsInGrid } from './systemgamesCrosswordAlgo';
 import { markWordsInGrid2 } from './systemgamesCrosswordAlgoForChallenges';
+var cron = require('node-cron');
 const Pool = require('pg').Pool
 const pool = new Pool({
   user: 'postgres',
@@ -45,6 +46,13 @@ app.use(bodyParser.json());
 
 const server= http.createServer(app);
 
+
+cron.schedule('10 0 * * *', async () => {
+  const limit =  await pool.query('SELECT * from systemsettings;');
+  await pool.query('UPDATE usertable set gamesleft=$1', [limit.rows[0].gameslimit])
+  console.log("Games limit reset for all players!")
+}, 
+{ scheduled: true});
 
 server.listen(PORT, () => {
     console.log("Server listening on port: "+PORT);
@@ -86,6 +94,8 @@ app.post('/search_crossword', async (req,res) => {
         const token = await pool.query('select * from usertable where id=$1', [req.body.userId]);
         const limit = req.body.searchLimit;
         const keyword = req.body.keyword;
+
+        // console.log(await duplicateGameCounter("WWE GAMES   - 1"));
         if(token.rows[0].accesstoken === req.body.accessToken) {
 
             const findWord = await pool.query
@@ -1191,27 +1201,17 @@ app.post('/getUserInfo', async (req, res) => {
               
             }
 
-            const gamestime = Date.parse(data.rows[0].gamesendeddatetime);
             var today = Date.now();
         
 
          console.log(today);
-         console.log(gamestime);
                      
-            if(gamestime !==null) {
+            // if(gamestime !==null) {
          //    console.log(gamestime < today);
 
-                if(gamestime < today) {
-                    const gamesLimit = await pool.query('SELECT * from systemsettings;');
-                    const limit = gamesLimit.rows[0].gameslimit;
-                    //gamesLeft reset
-                    await pool.query
-                    ('UPDATE userTable SET gamesleft=$2 , gamesendedatetime=null WHERE id=$1', [userid, limit]);
-
-                }
-                else {}
+            
               
-            }
+            
 
             const datanew = await pool.query('SELECT * FROM usertable WHERE id= $1;', [userid]);
             var data_ = datanew.rows[0];
@@ -3157,7 +3157,7 @@ async function duplicateGameCounter(originalTitle) {
       });
   
       // Step 4: Generate the new title
-      const newTitle = name + ' - ' + maxNumber;
+      const newTitle = name + '- ' + maxNumber;
   
       return newTitle;
     } catch (error) {
