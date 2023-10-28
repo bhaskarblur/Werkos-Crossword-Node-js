@@ -133,3 +133,31 @@ export function cleanWord(word: String) {
   }
   return array;
 }
+
+export function mergeLists(list1, list2) {
+  // Calculate the number of elements to take from each list
+  const totalElements = list1.length + list2.length;
+  var numElementsFromList1 = Math.ceil(0.6 * totalElements);
+  var numElementsFromList2 = totalElements - numElementsFromList1;
+
+  // Create a new list for the merged elements
+  const mergedList = [];
+
+  // Add elements from list1
+  while (numElementsFromList1 > 0 && list1.length > 0) {
+    const randomIndex = Math.floor(Math.random() * list1.length);
+    mergedList.push(list1[randomIndex]);
+    list1.splice(randomIndex, 1);
+    numElementsFromList1--;
+  }
+
+  // Add elements from list2
+  while (numElementsFromList2 > 0 && list2.length > 0) {
+    const randomIndex = Math.floor(Math.random() * list2.length);
+    mergedList.push(list2[randomIndex]);
+    list2.splice(randomIndex, 1);
+    numElementsFromList2--;
+  }
+
+  return mergedList;
+}
