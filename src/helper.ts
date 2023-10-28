@@ -57,6 +57,11 @@ export function generateUserName(username:string, length) {
    return username+result;
 }
 
+export function generateShareCode(length) {
+  var unix = Date.now() + ((Math.random()*100000).toFixed());
+  var code = String(unix).substr(String(unix).length - 7);
+  return code;
+}
 export function cleanWord(word: String) {
    const replacements = {
      'eÈÉÊËèéêë': 'E',

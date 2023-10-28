@@ -1,6 +1,5 @@
 import { cleanWord } from "./helper";
 
-// Function to initialize a grid with a given value
 function initializeGrid(rows, cols, value) {
   const grid = [];
   for (let i = 0; i < rows; i++) {
@@ -102,46 +101,23 @@ function fillEmptySpaces(grid, alphabetList) {
   }
 }
 
-function isPositionOccupied(occupiedPositions, row, col, wordLength, direction) {
-  // Check if the positions in the given direction are occupied
-  const numRows = occupiedPositions.length;
-  const numCols = occupiedPositions[0].length;
-
-  if (direction === 'horizontal') {
-    for (let i = 0; i < wordLength; i++) {
-      if (col + i >= numCols || occupiedPositions[row][col + i]) {
-        return true;
-      }
-    }
-  } else if (direction === 'vertical') {
-    for (let i = 0; i < wordLength; i++) {
-      if (row + i >= numRows || occupiedPositions[row + i][col]) {
-        return true;
-      }
-    }
-  } else if (direction === 'diagonal_up_right') {
-    for (let i = 0; i < wordLength; i++) {
-      if (row - i < 0 || col + i >= numCols || occupiedPositions[row - i][col + i]) {
-        return true;
-      }
-    }
-  } else if (direction === 'diagonal_down_right') {
-    for (let i = 0; i < wordLength; i++) {
-      if (row + i >= numRows || col + i >= numCols || occupiedPositions[row + i][col + i]) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-function markPositionOccupied(occupiedPositions, startRow, startCol, length, direction) {
+function markPositionOccupied(occupiedPositions, row, col, wordLength, direction) {
   const [dr, dc] = directionToDelta(direction);
 
-  for (let i = 0; i < length; i++) {
-    occupiedPositions[startRow + i * dr][startCol + i * dc] = true;
+  for (let i = 0; i < wordLength; i++) {
+    occupiedPositions[row + i * dr][col + i * dc] = true;
   }
+}
+
+function isPositionOccupied(occupiedPositions, row, col, wordLength, direction) {
+  const [dr, dc] = directionToDelta(direction);
+
+  for (let i = 0; i < wordLength; i++) {
+    if (occupiedPositions[row + i * dr][col + i * dc]) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function directionToDelta(direction) {
@@ -155,9 +131,10 @@ function directionToDelta(direction) {
     return [1, 1];
   }
 }
+
 export function markFixedWordsInGrid(grid, words, alphabets, maxMarkWord) {
   const markedWords = new Set(); // To track marked words
-  const filteredMarkedwords = new Set();
+  const filteredMarkedWords = new Set();
   const maxMarkedWords = maxMarkWord; // Maximum number of marked words
 
   // Initialize a boolean grid to track occupied positions
@@ -193,13 +170,13 @@ export function markFixedWordsInGrid(grid, words, alphabets, maxMarkWord) {
       }
 
       // Check if the word can be placed without overlapping
-      if (canPlaceWord(grid, cleanedWord, row, col, direction) && !isPositionOccupied(occupiedPositions, row, col, cleanedWord.length, direction)) {
+      if (canPlaceWord(grid, cleanedWord, row, col, direction)) {
         // Place the word and mark positions as occupied
         placeWord(grid, cleanedWord, row, col, direction);
         markPositionOccupied(occupiedPositions, row, col, cleanedWord.length, direction);
         placed = true;
         markedWords.add(word);
-        filteredMarkedwords.add(cleanedWord);
+        filteredMarkedWords.add(cleanedWord);
         break; // Move on to the next word
       }
     }
@@ -212,7 +189,7 @@ export function markFixedWordsInGrid(grid, words, alphabets, maxMarkWord) {
   // Fill the remaining empty spaces with random letters
   fillEmptySpaces(grid, alphabets);
 
-  return { grid, markedWords: Array.from(markedWords), filteredMarkedwords: Array.from(filteredMarkedwords) };
+  return { grid, markedWords: Array.from(markedWords), filteredMarkedWords: Array.from(filteredMarkedWords) };
 }
 
 function displayGrid(grid) {

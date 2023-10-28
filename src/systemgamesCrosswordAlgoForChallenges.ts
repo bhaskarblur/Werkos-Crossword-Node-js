@@ -1,11 +1,12 @@
 import { cleanWord } from "./helper";
 
-export function initializeGrid(rows, cols) {
+// Function to initialize a grid with a given value
+function initializeGrid(rows, cols, value) {
   const grid = [];
   for (let i = 0; i < rows; i++) {
     const row = [];
     for (let j = 0; j < cols; j++) {
-      row.push('');
+      row.push(value);
     }
     grid.push(row);
   }
@@ -106,50 +107,110 @@ function fillEmptySpaces(grid, alphabetList) {
   }
 }
 
-export function markWordsInGrid2(grid, words, alphabets, incorrectWords, words_limit) {
-  const markedWords = new Set(); // To track marked words
-  const filteredMarkedwords = new Set();
-  const maxMarkedWords = words_limit; // Minimum number of marked words
+function isPositionOccupied(occupiedPositions, row, col, wordLength, direction) {
+  // Check if the positions in the given direction are occupied
+  const numRows = occupiedPositions.length;
+  const numCols = occupiedPositions[0].length;
 
-  for (const word of words) {
+  if (direction === 'horizontal') {
+    for (let i = 0; i < wordLength; i++) {
+      if (col + i >= numCols || occupiedPositions[row][col + i]) {
+        return true;
+      }
+    }
+  } else if (direction === 'vertical') {
+    for (let i = 0; i < wordLength; i++) {
+      if (row + i >= numRows || occupiedPositions[row + i][col]) {
+        return true;
+      }
+    }
+  } else if (direction === 'diagonal_up_right') {
+    for (let i = 0; i < wordLength; i++) {
+      if (row - i < 0 || col + i >= numCols || occupiedPositions[row - i][col + i]) {
+        return true;
+      }
+    }
+  } else if (direction === 'diagonal_down_right') {
+    for (let i = 0; i < wordLength; i++) {
+      if (row + i >= numRows || col + i >= numCols || occupiedPositions[row + i][col + i]) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function markPositionOccupied(occupiedPositions, startRow, startCol, length, direction) {
+  const [dr, dc] = directionToDelta(direction);
+
+  for (let i = 0; i < length; i++) {
+    occupiedPositions[startRow + i * dr][startCol + i * dc] = true;
+  }
+}
+
+function directionToDelta(direction) {
+  if (direction === 'horizontal') {
+    return [0, 1];
+  } else if (direction === 'vertical') {
+    return [1, 0];
+  } else if (direction === 'diagonal_up_right') {
+    return [-1, 1];
+  } else if (direction === 'diagonal_down_right') {
+    return [1, 1];
+  }
+}
+
+export function markWordsInGrid2(grid, words, alphabets, incorrectWords, wordsLimit) {
+  const markedWords = new Set(); // To track marked words
+  const filteredMarkedWords = new Set();
+  const maxMarkedWords = wordsLimit; // Minimum number of marked words
+
+  // Initialize a boolean grid to track occupied positions
+  const occupiedPositions = initializeGrid(grid.length, grid[0].length, false);
+
+  for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+    const word = words[wordIndex];
     const cleanedWord = cleanWord(word);
+
     if (markedWords.size >= maxMarkedWords) {
       break; // Stop trying to place additional words once the limit is reached
     }
 
     let placed = false;
+    let direction;
 
     for (let attempt = 0; attempt < 100; attempt++) {
-      var direction;
-      if(incorrectWords.includes(word)) {
-      direction = getIncorrectWordsRandomDirection();
-      }
-      else {
+      if (incorrectWords.includes(word)) {
+        direction = getIncorrectWordsRandomDirection();
+      } else {
         direction = getRandomDirection();
       }
 
       // Generate random coordinates within grid bounds
       let row, col;
+
       if (direction === 'horizontal') {
         row = Math.floor(Math.random() * grid.length);
-        col = Math.floor(Math.random() * (grid[0].length - word.length + 1));
+        col = Math.floor(Math.random() * (grid[0].length - cleanedWord.length + 1));
       } else if (direction === 'vertical') {
-        row = Math.floor(Math.random() * (grid.length - word.length + 1));
+        row = Math.floor(Math.random() * (grid.length - cleanedWord.length + 1));
         col = Math.floor(Math.random() * grid[0].length);
       } else if (direction === 'diagonal_up_right') {
-        row = Math.floor(Math.random() * (grid.length - word.length + 1)) + (word.length - 1);
-        col = Math.floor(Math.random() * (grid[0].length - word.length + 1));
+        row = Math.floor(Math.random() * (grid.length - cleanedWord.length + 1)) + (cleanedWord.length - 1);
+        col = Math.floor(Math.random() * (grid[0].length - cleanedWord.length + 1));
       } else if (direction === 'diagonal_down_right') {
-        row = Math.floor(Math.random() * (grid.length - word.length + 1));
-        col = Math.floor(Math.random() * (grid[0].length - word.length + 1));
+        row = Math.floor(Math.random() * (grid.length - cleanedWord.length + 1));
+        col = Math.floor(Math.random() * (grid[0].length - cleanedWord.length + 1));
       }
 
-      if (canPlaceWord(grid, cleanedWord, row, col, direction)) {
+      if (canPlaceWord(grid, cleanedWord, row, col, direction) && !isPositionOccupied(occupiedPositions, row, col, cleanedWord.length, direction)) {
         placeWord(grid, cleanedWord, row, col, direction);
+        markPositionOccupied(occupiedPositions, row, col, cleanedWord.length, direction);
         placed = true;
         markedWords.add(word);
-        filteredMarkedwords.add(cleanedWord);
-        break; // Move on to the next word
+        filteredMarkedWords.add(cleanedWord);
+        break;
       }
     }
 
@@ -160,17 +221,6 @@ export function markWordsInGrid2(grid, words, alphabets, incorrectWords, words_l
 
   // Fill the remaining empty spaces with random letters
   fillEmptySpaces(grid, alphabets);
-  
-  return { grid, markedWords: Array.from(markedWords), filteredMarkedwords: Array.from(filteredMarkedwords)};
-}
 
-function displayGrid(grid) {
-  for (const row of grid) {
-    console.log(row.join(' '));
-  }
+  return { grid, markedWords: Array.from(markedWords), filteredMarkedWords: Array.from(filteredMarkedWords) };
 }
-
-// Example usage:
-// const { grid, markedWords } = markWordsInGrid(initializeGrid(14, 11), ['WORD1', 'WORD2', 'WORD3']);
-// displayGrid(grid);
-// console.log("Marked Words:", markedWords);
