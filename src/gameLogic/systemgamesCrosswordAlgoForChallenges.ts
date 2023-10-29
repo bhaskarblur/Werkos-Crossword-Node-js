@@ -1,5 +1,6 @@
-import { cleanWord } from "./helper";
+import { cleanWord } from "../helper/helper";
 
+// Function to initialize a grid with a given value
 function initializeGrid(rows, cols, value) {
   const grid = [];
   for (let i = 0; i < rows; i++) {
@@ -107,29 +108,31 @@ function fillEmptySpaces(grid, alphabetList) {
 }
 
 function isPositionOccupied(occupiedPositions, row, col, wordLength, direction) {
-  const [dr, dc] = directionToDelta(direction);
+  // Check if the positions in the given direction are occupied
+  const numRows = occupiedPositions.length;
+  const numCols = occupiedPositions[0].length;
 
   if (direction === 'horizontal') {
     for (let i = 0; i < wordLength; i++) {
-      if (col + i >= occupiedPositions[0].length || occupiedPositions[row][col + i]) {
+      if (col + i >= numCols || occupiedPositions[row][col + i]) {
         return true;
       }
     }
   } else if (direction === 'vertical') {
     for (let i = 0; i < wordLength; i++) {
-      if (row + i >= occupiedPositions.length || occupiedPositions[row + i][col]) {
+      if (row + i >= numRows || occupiedPositions[row + i][col]) {
         return true;
       }
     }
   } else if (direction === 'diagonal_up_right') {
     for (let i = 0; i < wordLength; i++) {
-      if (row - i < 0 || col + i >= occupiedPositions[0].length || occupiedPositions[row - i][col + i]) {
+      if (row - i < 0 || col + i >= numCols || occupiedPositions[row - i][col + i]) {
         return true;
       }
     }
   } else if (direction === 'diagonal_down_right') {
     for (let i = 0; i < wordLength; i++) {
-      if (row + i >= occupiedPositions.length || col + i >= occupiedPositions[0].length || occupiedPositions[row + i][col + i]) {
+      if (row + i >= numRows || col + i >= numCols || occupiedPositions[row + i][col + i]) {
         return true;
       }
     }
@@ -138,11 +141,11 @@ function isPositionOccupied(occupiedPositions, row, col, wordLength, direction) 
   return false;
 }
 
-function markPositionOccupied(occupiedPositions, row, col, wordLength, direction) {
+function markPositionOccupied(occupiedPositions, startRow, startCol, length, direction) {
   const [dr, dc] = directionToDelta(direction);
 
-  for (let i = 0; i < wordLength; i++) {
-    occupiedPositions[row + i * dr][col + i * dc] = true;
+  for (let i = 0; i < length; i++) {
+    occupiedPositions[startRow + i * dr][startCol + i * dc] = true;
   }
 }
 
@@ -158,51 +161,57 @@ function directionToDelta(direction) {
   }
 }
 
-export function markFixedWordsInGrid2(grid, words, alphabets, maxMarkWord, incorrectWords) {
-  const markedWords = new Set();
+export function markWordsInGrid2(grid, words, alphabets, incorrectWords, wordsLimit) {
+  const markedWords = new Set(); // To track marked words
   const filteredMarkedWords = new Set();
-  const maxMarkedWords = maxMarkWord;
+  const maxMarkedWords = wordsLimit; // Minimum number of marked words
 
+  // Initialize a boolean grid to track occupied positions
   const occupiedPositions = initializeGrid(grid.length, grid[0].length, false);
 
-  for (const word of words) {
+  for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+    const word = words[wordIndex];
     const cleanedWord = cleanWord(word);
 
     if (markedWords.size >= maxMarkedWords) {
-      break;
+      break; // Stop trying to place additional words once the limit is reached
     }
 
     let placed = false;
     let direction;
-    
-    if (incorrectWords.includes(word)) {
-      direction = getIncorrectWordsRandomDirection();
-    } else {
-      direction = getRandomDirection();
-    }
 
-    let row, col;
+    for (let attempt = 0; attempt < 100; attempt++) {
+      if (incorrectWords.includes(word)) {
+        direction = getIncorrectWordsRandomDirection();
+      } else {
+        direction = getRandomDirection();
+      }
 
-    if (direction === 'horizontal') {
-      row = Math.floor(Math.random() * grid.length);
-      col = Math.floor(Math.random() * (grid[0].length - cleanedWord.length + 1));
-    } else if (direction === 'vertical') {
-      row = Math.floor(Math.random() * (grid.length - cleanedWord.length + 1));
-      col = Math.floor(Math.random() * grid[0].length);
-    } else if (direction === 'diagonal_up_right') {
-      row = Math.floor(Math.random() * (grid.length - cleanedWord.length + 1)) + (cleanedWord.length - 1);
-      col = Math.floor(Math.random() * (grid[0].length - cleanedWord.length + 1));
-    } else if (direction === 'diagonal_down_right') {
-      row = Math.floor(Math.random() * (grid.length - cleanedWord.length + 1));
-      col = Math.floor(Math.random() * (grid[0].length - cleanedWord.length + 1));
-    }
+      // Generate random coordinates within grid bounds
+      let row, col;
 
-    if (canPlaceWord(grid, cleanedWord, row, col, direction) && !isPositionOccupied(occupiedPositions, row, col, cleanedWord.length, direction)) {
-      placeWord(grid, cleanedWord, row, col, direction);
-      markPositionOccupied(occupiedPositions, row, col, cleanedWord.length, direction);
-      placed = true;
-      markedWords.add(word);
-      filteredMarkedWords.add(cleanedWord);
+      if (direction === 'horizontal') {
+        row = Math.floor(Math.random() * grid.length);
+        col = Math.floor(Math.random() * (grid[0].length - cleanedWord.length + 1));
+      } else if (direction === 'vertical') {
+        row = Math.floor(Math.random() * (grid.length - cleanedWord.length + 1));
+        col = Math.floor(Math.random() * grid[0].length);
+      } else if (direction === 'diagonal_up_right') {
+        row = Math.floor(Math.random() * (grid.length - cleanedWord.length + 1)) + (cleanedWord.length - 1);
+        col = Math.floor(Math.random() * (grid[0].length - cleanedWord.length + 1));
+      } else if (direction === 'diagonal_down_right') {
+        row = Math.floor(Math.random() * (grid.length - cleanedWord.length + 1));
+        col = Math.floor(Math.random() * (grid[0].length - cleanedWord.length + 1));
+      }
+
+      if (canPlaceWord(grid, cleanedWord, row, col, direction) && !isPositionOccupied(occupiedPositions, row, col, cleanedWord.length, direction)) {
+        placeWord(grid, cleanedWord, row, col, direction);
+        markPositionOccupied(occupiedPositions, row, col, cleanedWord.length, direction);
+        placed = true;
+        markedWords.add(word);
+        filteredMarkedWords.add(cleanedWord);
+        break;
+      }
     }
 
     if (!placed) {
@@ -210,13 +219,8 @@ export function markFixedWordsInGrid2(grid, words, alphabets, maxMarkWord, incor
     }
   }
 
+  // Fill the remaining empty spaces with random letters
   fillEmptySpaces(grid, alphabets);
 
   return { grid, markedWords: Array.from(markedWords), filteredMarkedWords: Array.from(filteredMarkedWords) };
-}
-
-function displayGrid(grid) {
-  for (const row of grid) {
-    console.log(row.join(' '));
-  }
 }
