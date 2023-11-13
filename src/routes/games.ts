@@ -46,7 +46,7 @@ app.post('/search_crossword', async (req,res) => {
         const limit = req.body.searchLimit;
         const keyword = req.body.keyword;
 
-        // console.log(await duplicateGameCounter("WWE GAMES"));
+        console.log(await duplicateGameCounter("TEST"));
         if(token.rows[0].accesstoken === req.body.accessToken) {
 
             const findWord = await pool.query
@@ -1220,6 +1220,41 @@ console.log('id', req.body.gameId);
             await pool.query('DELETE from gameleaderboards where gameid=$1', [req.body.gameId]);
 
             res.status(200).send({'message':'Game deleted successfully!'})
+    }
+    catch (err) {
+        res.status(403).send({'message':err })
+    }
+}
+);
+
+app.post('/deleteUserGame', async function (req, res) {
+    try{
+
+        const data= await pool.query('SELECT * FROM userTable WHERE Id= $1;', [req.body.userId]);
+        if(data.rows.length <1) {   
+            res.status(401).send({'message':'Invalid userId'})
+        }
+        else {
+            if(data.rows[0].accesstoken === req.body.accessToken) {
+                console.log('id', req.body.gameId);
+        await pool.query('DELETE from systemgames where gameid=$1;', [req.body.gameId]);
+
+        await pool.query('DELETE from systemgameallwords where gameid=$1', [req.body.gameId]);
+
+        await pool.query('DELETE from systemgamecorrectwords where gameid=$1', [req.body.gameId]);
+
+        await pool.query('DELETE from systemgameincorrectwords where gameid=$1', [req.body.gameId]);
+
+        await pool.query('DELETE from gridstable where gameid=$1', [req.body.gameId]);
+
+            await pool.query('DELETE from gameleaderboards where gameid=$1', [req.body.gameId]);
+
+            res.status(200).send({'message':'Game deleted successfully!'})
+            }
+            else {
+                res.status(401).send({'message':'Invalid token'})
+            }
+        }
     }
     catch (err) {
         res.status(403).send({'message':err })
@@ -2413,7 +2448,7 @@ async function duplicateGameCounter(originalTitle) {
       });
   
       // Step 4: Generate the new title
-      const newTitle = name + '- ' + maxNumber;
+      const newTitle = name + ' - ' + maxNumber;
   
       return newTitle;
     } catch (error) {
