@@ -104,7 +104,7 @@ export function cleanWord(word: String) {
      '_' : '',
      '@' : '',
      ',' : '',
-     '/'  : ''
+     '/'  : '',
    };
  
    for (const k in replacements) {
@@ -118,7 +118,7 @@ export function cleanWord(word: String) {
   //  return word.replaceAll('.', '').replaceAll('-','').replaceAll(' ','').replace("'","").
   //  replaceAll('!','').replaceAll('_', '').replaceAll('@', '').replaceAll(',','').replaceAll('/','');
 
-  return word;
+  return word.trim();
   
  }
 
@@ -160,4 +160,14 @@ export function mergeLists(list1, list2) {
   }
 
   return mergedList;
+}
+
+export function generateRandomList(length: number, alphabets) {
+
+  var list = []
+  for (let i = 0; i < length; i++) {
+    list.push(alphabets.charAt(Math.floor(Math.random() * length)));
+  }
+
+  return list;
 }

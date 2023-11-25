@@ -329,6 +329,8 @@ catch (err)
         response['gameDetails'] = singleGame;
         response['allWords'] = allwords.rows;
      
+        const row =   req.body.words_limit >=  15 ? 14 : req.body.words_limit > 9 ? 11 : req.body.words_limit < 10 && req.body.words_limit > 6  ? 9 : 9
+        const col =   req.body.words_limit >=  15 ? 11 : req.body.words_limit > 9 ? 9 : req.body.words_limit < 10 && req.body.words_limit > 6 ? 7 : 7
 
         var filtered_words = []
         var limited_words =[];
@@ -343,7 +345,7 @@ catch (err)
             if(singleGame?.gamelanguage === 'es') {
                 
     
-            const grid_ = initializeGrid(14, 11);
+            const grid_ = initializeGrid(row, col);
             console.log('originalArray: '+allWords);
             console.log('shuffledArray: '+shuffleArray(allWords));
             const { grid, markedWords } = 
@@ -363,12 +365,12 @@ catch (err)
         }
 
         else {
-            const grid_ = initializeGrid(14, 11);
+            const grid_ = initializeGrid(row, col);
             console.log('originalArray: '+allWords);
             console.log('shuffledArray: '+shuffleArray(allWords));
             const { grid, markedWords } =
              markWordsInGrid(grid_, allWords, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' , req.body.words_limit );
-            console.log('marked: '+markedWords);
+            console.log('marked__: '+markedWords);
             markedWords_ = markedWords
               
             for(let i=0; i <= req.body.words_limit; i++) {
