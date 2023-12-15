@@ -46,7 +46,6 @@ app.post('/search_crossword', async (req,res) => {
         const limit = req.body.searchLimit;
         const keyword = req.body.keyword;
 
-        console.log(await duplicateGameCounter("TEST"));
         if(token.rows[0].accesstoken === req.body.accessToken) {
 
             const findWord = await pool.query
@@ -54,11 +53,12 @@ app.post('/search_crossword', async (req,res) => {
             , [limit]);
 
             const gamesFound =[]
-
+            
             if(findWord.rows.length>0) {
                 for(var i=0;i <findWord.rows.length;i++) {
                     const game = await pool.query
-                    ('SELECT * from systemgames where gameid=$1 AND limitedwords >= $2 ;', [findWord.rows[i].gameid,  parseInt(req.body.words_limit) - 1] );
+                    ('SELECT * from systemgames where gameid=$1 AND searchtype !=$2 AND limitedwords >= $3 ;', 
+                    [findWord.rows[i].gameid, 'challenge', parseInt(req.body.words_limit) - 1] );
 
                     if(game.rows[0] !=null) {
                     gamesFound.push(game.rows[0]);
