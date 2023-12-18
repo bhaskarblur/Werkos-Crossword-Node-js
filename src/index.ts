@@ -40,12 +40,15 @@ app.use(games.getRouter())
 app.use(general.getRouter())
 
 cron.schedule('10 0 * * *', async () => {
-  const limit =  await pool.query('SELECT * from systemsettings;');
-  await pool.query('UPDATE usertable set gamesleft=$1', [limit.rows[0].gameslimit])
-  console.log("Games limit reset for all players!")
+  resetGames()
 }, 
 { scheduled: true});
 
+async function resetGames() {
+  const limit =  await pool.query('SELECT * from systemsettings;');
+  await pool.query('UPDATE usertable set gamesleft=$1', [limit.rows[0].gameslimit])
+  console.log("Games limit reset for all players!")
+}
 server.listen(PORT, () => {
     console.log("Server listening on port: "+PORT);
 });
@@ -53,5 +56,11 @@ server.listen(PORT, () => {
 app.get('/', (req, res) => {
     res.send('Crossword app for mobile. Download now.');
   });
+
+
+app.get('/reset-games', (req, res) => {
+  resetGames();
+  res.send('Games limit reset');
+});
 
 
