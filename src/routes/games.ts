@@ -2085,6 +2085,9 @@ app.post('/getGameByCode_backup', async (req, res) => {
             // filtered_words.push(randomLimitedWithFilter(filtered_words, limited_words))
         // }
         
+        const row =  req.body.words_limit >=  15 ? 14 : req.body.words_limit > 9 ? 12 : req.body.words_limit < 10 && req.body.words_limit > 6  ? 11 : 11
+        const col =  req.body.words_limit >=  15 ? 11 : req.body.words_limit > 9 ? 10 : req.body.words_limit < 10 && req.body.words_limit > 6 ? 9 : 9
+
 
             var crossword;
             var singleGame =  game.rows[0];
@@ -2093,7 +2096,7 @@ app.post('/getGameByCode_backup', async (req, res) => {
                 
                 if(singleGame?.gamelanguage === 'es') {
         
-                const grid_ = initializeGrid(14, 11);
+                const grid_ = initializeGrid(row, col);
                 console.log('originalArray: '+allWords);
                     console.log('shuffledArray: '+shuffleArray(allWords));
                 const { grid, markedWords } = 
@@ -2113,7 +2116,7 @@ app.post('/getGameByCode_backup', async (req, res) => {
             }
     
             else {
-                const grid_ = initializeGrid(14, 11);
+                const grid_ = initializeGrid(row, col);
                 console.log('originalArray: '+allWords);
                     console.log('shuffledArray: '+shuffleArray(allWords));
                 const { grid, markedWords } =
